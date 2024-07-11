@@ -410,10 +410,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3350599b9d7d7734db38c4e6864d1916, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  emptyPrefab: {fileID: 6211497103043155422, guid: 1a9eadc88dcd8e244969ef0021235c45, type: 3}
-  hoverPrefab: {fileID: 6211497103043155422, guid: 1a9eadc88dcd8e244969ef0021235c45, type: 3}
-  columns: 9
-  rows: 9
+  prefabs:
+  - {fileID: 6211497103043155422, guid: 1a9eadc88dcd8e244969ef0021235c45, type: 3}
+  - {fileID: 6211497103043155422, guid: 1a9eadc88dcd8e244969ef0021235c45, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

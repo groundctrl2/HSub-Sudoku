@@ -1,17 +1,23 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.SceneManagement;
+using UnityEditor.U2D.Aseprite;
 using UnityEngine;
 
 public class SudokuGrid : MonoBehaviour
 {
-    public GameObject[] prefabs = new GameObject[2];
+    public GameObject cellPrefab;
+    public Material[] materials = new Material[2];
+
     private Vector3Int gridCenter = new Vector3Int(0, 0, 0);
-    private SudokuCell[] cells;
+    private Vector3[] cellPositions = new Vector3[81];
+    private SudokuCell[] sudokuCells = new SudokuCell[81];
 
     // Start is called before the first frame update
     void Start()
     {
-        cells = GetCells();
+        GetCellPositions();
         DrawGrid();
     }
 
@@ -21,10 +27,10 @@ public class SudokuGrid : MonoBehaviour
 
     }
 
-    private SudokuCell[] GetCells()
+    // Calculates and stores (by index) all 81 cell positions based on cell prefab size
+    private void GetCellPositions()
     {
-        SudokuCell[] cells = new SudokuCell[81];
-        Renderer renderer = prefabs[0].GetComponent<Renderer>();
+        Renderer renderer = cellPrefab.GetComponent<Renderer>();
         Vector3 cellSize = renderer.bounds.size;
         float cellOffset = cellSize.x / 15;  // Assuming square cells; adjust if necessary
 
@@ -45,20 +51,27 @@ public class SudokuGrid : MonoBehaviour
                 float newY = -(cellSize.y + cellOffset) * row - cellSize.y / 2;
                 Vector3 position = gridTopLeft + new Vector3(newX, newY, 0);
 
-                // Store empty cell
-                cells[index++] = new SudokuCell(position, PrefabIndex.empty);
+                cellPositions[index++] = position; // Store cell position
             }
         }
-
-        return cells;
     }
 
+    // Iterates through each cell position and creates GameObject and corresponding SudokuCell
     private void DrawGrid()
     {
-        foreach (SudokuCell cell in cells)
+        for (int i = 0; i < cellPositions.Length; i++)
         {
-            GameObject cellPrefab = Instantiate(prefabs[(int)cell.prefabIndex], transform);
-            cellPrefab.transform.localPosition = cell.position;
+            Vector3 position = cellPositions[i];
+
+            // Create GameObject
+            GameObject cell = Instantiate(cellPrefab, position, Quaternion.identity);
+            cell.AddComponent<BoxCollider>();
+
+            // Create SudokuCell
+            SudokuCell sudokuCell = cell.AddComponent<SudokuCell>();
+            sudokuCell.Initialize(this, i, position);
+
+            sudokuCells[i] = sudokuCell; // Store SudokuCell
         }
     }
 }
