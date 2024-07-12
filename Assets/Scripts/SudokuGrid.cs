@@ -4,13 +4,17 @@ using System.Collections.Generic;
 using UnityEditor.SceneManagement;
 using UnityEditor.U2D.Aseprite;
 using UnityEngine;
+using TMPro;
+using JetBrains.Annotations;
 
 public class SudokuGrid : MonoBehaviour
 {
+    public Canvas canvas;
     public GameObject cellPrefab;
+    public GameObject cellTextPrefab;
     public Material[] materials = new Material[2];
 
-    private Vector3Int gridCenter = new Vector3Int(0, 0, 0);
+    private Vector3 gridCenter = new Vector3(-7.5f, 0, 0);
     private Vector3[] cellPositions = new Vector3[81];
     private SudokuCell[] sudokuCells = new SudokuCell[81];
 
@@ -63,14 +67,20 @@ public class SudokuGrid : MonoBehaviour
         {
             Vector3 position = cellPositions[i];
 
-            // Create GameObject
+            // Create cell GameObject
             GameObject cell = Instantiate(cellPrefab, position, Quaternion.identity);
+            cell.transform.SetParent(canvas.transform, true); // Ensure cell is parented to the canvas
             cell.AddComponent<BoxCollider>();
+
+            // Add the text GameObject
+            GameObject cellText = Instantiate(cellTextPrefab, cell.transform);
+            cellText.transform.SetParent(cell.transform, false); // Ensure cell text is parented to the cell
+            RectTransform rectTransform = cellText.GetComponent<RectTransform>();
+            rectTransform.anchoredPosition = Vector2.zero;
 
             // Create SudokuCell
             SudokuCell sudokuCell = cell.AddComponent<SudokuCell>();
-            sudokuCell.Initialize(this, i, position);
-
+            sudokuCell.Initialize(this, i, position, cellText.GetComponent<TextMeshProUGUI>());
             sudokuCells[i] = sudokuCell; // Store SudokuCell
         }
     }
