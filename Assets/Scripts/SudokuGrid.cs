@@ -47,8 +47,8 @@ public class SudokuGrid : MonoBehaviour
         float cellOffset = cellSize.x / 15;  // Assuming square cells; adjust if necessary
 
         // Calculate the total width and height of the grid
-        float gridWidth = 9 * cellSize.x + 8 * cellOffset;
-        float gridHeight = 9 * cellSize.y + 8 * cellOffset;
+        float gridWidth = 9 * cellSize.x + 9 * cellOffset;   // Adjusted for extra box offsets (without: 8 * cellOffset)
+        float gridHeight = 9 * cellSize.y + 9 * cellOffset;  // Adjusted for extra box offsets
 
         // Calculate the top left corner based on the center
         Vector3 gridTopLeft = gridCenter + new Vector3(-gridWidth / 2, gridHeight / 2, 0);
@@ -58,9 +58,16 @@ public class SudokuGrid : MonoBehaviour
         {
             for (int col = 0; col < 9; col++)
             {
-                // Calculate the position of each cell, adjusted by cell size
+                // Calculate the position of each cell, adjusted by cell size and offsets
                 float newX = (cellSize.x + cellOffset) * col + cellSize.x / 2;
                 float newY = -(cellSize.y + cellOffset) * row - cellSize.y / 2;
+
+                // Add additional offset to separate 3x3 boxes
+                if (col >= 3) newX += cellOffset;
+                if (col >= 6) newX += cellOffset;
+                if (row >= 3) newY -= cellOffset;
+                if (row >= 6) newY -= cellOffset;
+
                 Vector3 position = gridTopLeft + new Vector3(newX, newY, 0);
 
                 cellPositions[index++] = position; // Store cell position
