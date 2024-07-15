@@ -5,24 +5,32 @@ using UnityEditor.SceneManagement;
 using UnityEditor.U2D.Aseprite;
 using UnityEngine;
 using TMPro;
-using JetBrains.Annotations;
 
 public class SudokuGrid : MonoBehaviour
 {
-    public Canvas canvas;
+    public GameObject cellsParent;
     public GameObject cellPrefab;
     public GameObject cellTextPrefab;
-    public Material[] materials = new Material[2];
+    public Material[] materials = new Material[3];
 
-    private Vector3 gridCenter = new Vector3(-7.5f, 0, 0);
+    private Vector3 gridCenter = new Vector3(-8.5f, 0, 0);
     private Vector3[] cellPositions = new Vector3[81];
     private SudokuCell[] sudokuCells = new SudokuCell[81];
+
+    private bool[] cellsClicked = new bool[81];
+    private int[] cellValues = new int[81];
 
     // Start is called before the first frame update
     void Start()
     {
         GetCellPositions();
         DrawGrid();
+
+        for (int i = 0; i < 81; i++)
+        {
+            cellsClicked[i] = false;
+            cellValues[i] = 0;
+        }
     }
 
     // Update is called once per frame
@@ -69,7 +77,7 @@ public class SudokuGrid : MonoBehaviour
 
             // Create cell GameObject
             GameObject cell = Instantiate(cellPrefab, position, Quaternion.identity);
-            cell.transform.SetParent(canvas.transform, true); // Ensure cell is parented to the canvas
+            cell.transform.SetParent(cellsParent.transform, true); // Ensure cell is parented to the canvas's cells GameObject
             cell.AddComponent<BoxCollider>();
 
             // Add the text GameObject
@@ -82,6 +90,50 @@ public class SudokuGrid : MonoBehaviour
             SudokuCell sudokuCell = cell.AddComponent<SudokuCell>();
             sudokuCell.Initialize(this, i, position, cellText.GetComponent<TextMeshProUGUI>());
             sudokuCells[i] = sudokuCell; // Store SudokuCell
+        }
+    }
+
+    // Set whether a cell at given index is selected
+    public void SetSelected(int index, bool isSelected)
+    {
+        if (isSelected)
+            cellsClicked[index] = true;
+        else
+            cellsClicked[index] = false;
+    }
+
+    // Add the given number value to the selected cells' text and recorded value
+    public void NumberSelected(int buttonNumber)
+    {
+        for (int i = 0; i < 81; i++)
+        {
+            if (cellsClicked[i])
+            {
+                sudokuCells[i].SetText($"{buttonNumber}");
+                cellValues[i] = buttonNumber;
+            }
+        }
+    }
+
+    // Deselect all cells
+    public void DeselectAll()
+    {
+        for (int i = 0; i < 81; i++)
+            sudokuCells[i].Deselect();
+    }
+
+    // Clear the given number value to the selected cells' text and recorded value and deselect 
+    public void ClearSelected()
+    {
+        for (int i = 0; i < 81; i++)
+        {
+            if (cellsClicked[i])
+            {
+                sudokuCells[i].SetText("");
+                cellValues[i] = 0;
+                sudokuCells[i].Deselect();
+                cellsClicked[i] = false;
+            }
         }
     }
 }
