@@ -37,7 +37,7 @@ public class ButtonManager : MonoBehaviour
         if (buttonIndex < 9)
         {
             int buttonNumber = buttonIndex + 1; // zero-indexed originally
-            grid.NumberSelected(buttonNumber);
+            grid.AddDigitToSelected(buttonNumber);
         }
         // Clear button
         else if (buttonIndex == 9)

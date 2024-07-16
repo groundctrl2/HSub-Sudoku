@@ -21,7 +21,7 @@ public class SudokuGrid : MonoBehaviour
     private SudokuCell[] sudokuCells = new SudokuCell[81];
 
     private bool[] cellsClicked = new bool[81];
-    private int[] cellValues = new int[81];
+    private int[] cellDigits = new int[81];
     private float cellSize; // Set in ResizeCellAndCenter()
 
     // Start is called before the first frame update
@@ -34,7 +34,7 @@ public class SudokuGrid : MonoBehaviour
         for (int i = 0; i < 81; i++)
         {
             cellsClicked[i] = false;
-            cellValues[i] = 0;
+            cellDigits[i] = 0;
         }
     }
 
@@ -49,11 +49,11 @@ public class SudokuGrid : MonoBehaviour
     {
         Renderer renderer = cellPrefab.GetComponent<Renderer>();
         Vector3 cellSize = renderer.bounds.size;
-        float cellOffset = cellSize.x / 15;  // Assuming square cells; adjust if necessary
+        float cellOffset = cellSize.x / 15; // Assuming square cells; adjust if necessary
 
         // Calculate the total width and height of the grid
-        float gridWidth = 9 * cellSize.x + 9 * cellOffset;   // Adjusted for extra box offsets (without: 8 * cellOffset)
-        float gridHeight = 9 * cellSize.y + 9 * cellOffset;  // Adjusted for extra box offsets
+        float gridWidth = 9 * cellSize.x + 9 * cellOffset; // Adjusted for extra box/subgrid offsets (without: 8 * cellOffset)
+        float gridHeight = 9 * cellSize.y + 9 * cellOffset; // Adjusted for extra box/subgrid offsets
 
         // Calculate the top left corner based on the center
         Vector3 gridTopLeft = gridCenter + new Vector3(-gridWidth / 2, gridHeight / 2, 0);
@@ -67,7 +67,7 @@ public class SudokuGrid : MonoBehaviour
                 float newX = (cellSize.x + cellOffset) * col + cellSize.x / 2;
                 float newY = -(cellSize.y + cellOffset) * row - cellSize.y / 2;
 
-                // Add additional offset to separate 3x3 boxes
+                // Add additional offset to separate 3x3 boxes/subgrids
                 if (col >= 3) newX += cellOffset;
                 if (col >= 6) newX += cellOffset;
                 if (row >= 3) newY -= cellOffset;
@@ -140,15 +140,16 @@ public class SudokuGrid : MonoBehaviour
             cellsClicked[index] = false;
     }
 
-    // Add the given number value to the selected cells' text and recorded value
-    public void NumberSelected(int buttonNumber)
+    // Add the given digit to the selected cells' text and recorded value
+    public void AddDigitToSelected(int buttonNumber)
     {
         for (int i = 0; i < 81; i++)
         {
             if (cellsClicked[i])
             {
                 sudokuCells[i].SetMainText($"{buttonNumber}");
-                cellValues[i] = buttonNumber;
+                cellDigits[i] = buttonNumber;
+                UpdateNotes();
             }
         }
     }
@@ -168,7 +169,7 @@ public class SudokuGrid : MonoBehaviour
             if (cellsClicked[i])
             {
                 sudokuCells[i].SetMainText("");
-                cellValues[i] = 0;
+                cellDigits[i] = 0;
                 sudokuCells[i].Deselect();
                 cellsClicked[i] = false;
             }
@@ -190,5 +191,15 @@ public class SudokuGrid : MonoBehaviour
         // Set the grid center
         float gridCenterX = mainCamera.transform.position.x - cameraWidth / 2.3f;
         gridCenter = new Vector3(gridCenterX, mainCamera.transform.position.y, mainCamera.transform.position.z);
+    }
+
+    private void UpdateNotes()
+    {
+        SudokuRules sudokuRules = new SudokuRules(cellDigits);
+        for (int i = 0; i < 81; i++)
+        {
+            if (cellDigits[i] == 0)
+                sudokuCells[i].SetNoteText(sudokuRules.notesGrid[i]);
+        }
     }
 }

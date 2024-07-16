@@ -1912,10 +1912,10 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.0876015, y: 1.0876015, z: 1.0876015}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1773688339}
+  m_Father: {fileID: 1741311251}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1457027055
 GameObject:
@@ -2202,6 +2202,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1977797001}
+  - {fileID: 1346557619}
   m_Father: {fileID: 1773688339}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -2222,7 +2223,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mainCamera: {fileID: 519420031}
-  cellParent: {fileID: 0}
+  cellParent: {fileID: 1346557618}
   cellPrefab: {fileID: 6211497103043155422, guid: 1a9eadc88dcd8e244969ef0021235c45, type: 3}
   mainTextPrefab: {fileID: 2910328877509804459, guid: 149d286e8cab02744891b06a807d2438, type: 3}
   noteTextPrefab: {fileID: 2910328877509804459, guid: 39a545c6822a58943814b420d0da9ce6, type: 3}
@@ -2325,7 +2326,6 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1741311251}
-  - {fileID: 1346557619}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}

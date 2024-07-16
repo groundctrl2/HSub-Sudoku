@@ -37,25 +37,49 @@ public class SudokuCell : MonoBehaviour
         normal = grid.materials[0];
         hovered = grid.materials[1];
         selected = grid.materials[2];
-
-        SetNoteText("test");
     }
 
     // Set the cell's text
     public void SetMainText(string text)
     {
         mainText.text = text;
-        upperText.text = "";
-        middleText.text = "";
-        lowerText.text = "";
+
+        // Wipe out notes if adding a digit
+        if (text != "")
+        {
+            upperText.text = "";
+            middleText.text = "";
+            lowerText.text = "";
+        }
     }
 
     // Set the cell's note text
-    public void SetNoteText(string text)
+    public void SetNoteText(bool[] notes)
     {
-        upperText.text = "1 2 3";
-        middleText.text = "4 5 6";
-        lowerText.text = "7 8 9";
+        string upperString = "";
+        string middleString = "";
+        string lowerString = "";
+
+        for (int i = 0; i < 9; i++)
+        {
+            int number = i + 1; // "Calculate" the number from the index
+            if (number <= 3)
+                upperString += notes[i] ? number + " " : "  ";
+            else if (number <= 6)
+                middleString += notes[i] ? number + " " : "  ";
+            else
+                lowerString += notes[i] ? number + " " : "  ";
+        }
+
+        // Trim any trailing spaces
+        upperString = upperString.Trim();
+        middleString = middleString.Trim();
+        lowerString = lowerString.Trim();
+
+        // Set the text properties
+        upperText.text = upperString;
+        middleText.text = middleString;
+        lowerText.text = lowerString;
     }
 
     // Set the cell's material and bool value whether the cell is selected
