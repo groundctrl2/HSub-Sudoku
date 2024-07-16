@@ -435,7 +435,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: deselect
+  m_text: 'clear
+
+'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -618,7 +620,7 @@ Camera:
   far clip plane: 1000
   field of view: 34
   orthographic: 1
-  orthographic size: 11
+  orthographic size: 30
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -1776,7 +1778,7 @@ GameObject:
   - component: {fileID: 1258783924}
   - component: {fileID: 1258783923}
   m_Layer: 5
-  m_Name: Button Deselect
+  m_Name: Button Clear
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2218,6 +2220,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3350599b9d7d7734db38c4e6864d1916, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  canvas: {fileID: 1773688336}
   cellsParent: {fileID: 1346557618}
   cellPrefab: {fileID: 6211497103043155422, guid: 1a9eadc88dcd8e244969ef0021235c45, type: 3}
   cellTextPrefab: {fileID: 2910328877509804459, guid: 149d286e8cab02744891b06a807d2438, type: 3}
@@ -2463,7 +2466,7 @@ GameObject:
   - component: {fileID: 1844682904}
   - component: {fileID: 1844682903}
   m_Layer: 5
-  m_Name: Button Clear
+  m_Name: Button Deselect
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2980,8 +2983,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 235, y: 0}
-  m_SizeDelta: {x: -550, y: -60}
+  m_AnchoredPosition: {x: 239, y: 0}
+  m_SizeDelta: {x: -514.039, y: -65.669}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1977797002
 MonoBehaviour:
@@ -3044,6 +3047,7 @@ MonoBehaviour:
   - {fileID: 392705025}
   - {fileID: 1561869289}
   - {fileID: 1818650475}
+  - {fileID: 1258783923}
   - {fileID: 1844682903}
 --- !u!1 &1981304134
 GameObject:
@@ -3236,7 +3240,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: clear
+  m_text: deselect
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}

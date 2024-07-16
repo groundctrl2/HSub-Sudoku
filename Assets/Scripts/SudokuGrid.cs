@@ -8,12 +8,13 @@ using TMPro;
 
 public class SudokuGrid : MonoBehaviour
 {
+    public Canvas canvas;
     public GameObject cellsParent;
     public GameObject cellPrefab;
     public GameObject cellTextPrefab;
     public Material[] materials = new Material[3];
 
-    private Vector3 gridCenter = new Vector3(-8.5f, 0, 0);
+    private Vector3 gridCenter;
     private Vector3[] cellPositions = new Vector3[81];
     private SudokuCell[] sudokuCells = new SudokuCell[81];
 
@@ -23,6 +24,7 @@ public class SudokuGrid : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        ResizeCellAndCenter();
         GetCellPositions();
         DrawGrid();
 
@@ -142,5 +144,22 @@ public class SudokuGrid : MonoBehaviour
                 cellsClicked[i] = false;
             }
         }
+    }
+
+    private void ResizeCellAndCenter()
+    {
+        // Calculate cell size based on canvas size and ratio
+        RectTransform canvasRect = canvas.GetComponent<RectTransform>();
+        float canvasWidth = canvasRect.rect.width;
+        float cellSizeRatio = 0.0067f; // Ratio of the cell size to the canvas size
+        float cellSize = canvasWidth * cellSizeRatio;
+
+        // Resize the cell prefab
+        Vector3 cellScale = new Vector3(cellSize, cellSize, cellPrefab.transform.localScale.z);
+        cellPrefab.transform.localScale = cellScale;
+
+        // 
+        float gridCenterX = canvasRect.position.x - canvasRect.rect.width / 35;
+        gridCenter = new Vector3(gridCenterX, canvasRect.position.y, canvasRect.position.z);
     }
 }
