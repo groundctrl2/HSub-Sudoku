@@ -47,9 +47,18 @@ public class SudokuRules
         return oneDGrid;
     }
 
-    // Method to check if placing a digit is valid according to Sudoku rules
+    // 2D input method to check if placing a digit is valid according to Sudoku rules
     public bool IsValidMove(int rowIndex, int colIndex, int digit)
     {
+        return IsRowValid(rowIndex, digit) && IsColValid(colIndex, digit) && IsSubgridValid(rowIndex, colIndex, digit);
+    }
+
+    // 1D input method to check if placing a digit is valid according to Sudoku rules
+    public bool IsValidMove(int index, int digit)
+    {
+        int rowIndex = index / 9;
+        int colIndex = index % 9;
+
         return IsRowValid(rowIndex, digit) && IsColValid(colIndex, digit) && IsSubgridValid(rowIndex, colIndex, digit);
     }
 

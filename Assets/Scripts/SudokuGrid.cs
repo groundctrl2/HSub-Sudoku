@@ -15,6 +15,8 @@ public class SudokuGrid : MonoBehaviour
     public GameObject mainTextPrefab;
     public GameObject noteTextPrefab;
     public Material[] materials = new Material[3];
+    public Color noteColor;
+    public Color incorrectColor;
 
     private Vector3 gridCenter;
     private Vector3[] cellPositions = new Vector3[81];
@@ -94,8 +96,6 @@ public class SudokuGrid : MonoBehaviour
             cell.transform.localPosition = new Vector3(position.x, position.y, 0); // Set the position explicitly
             cell.AddComponent<BoxCollider>();
 
-            Debug.Log($"Cell {i} World Position: {cell.transform.position}, Local Position: {cell.transform.localPosition}");
-
             // Add the main text GameObject
             GameObject mainText = Instantiate(mainTextPrefab, cell.transform);
             mainText.transform.SetParent(cell.transform, false); // Ensure cell text is parented to the cell
@@ -147,11 +147,16 @@ public class SudokuGrid : MonoBehaviour
         {
             if (cellsClicked[i])
             {
-                sudokuCells[i].SetMainText($"{buttonNumber}");
+                // Check whether valid add
+                SudokuRules sudokuRules = new SudokuRules(cellDigits);
+                bool isValid = sudokuRules.IsValidMove(i, buttonNumber);
+
+                sudokuCells[i].SetMainText($"{buttonNumber}", isValid);
                 cellDigits[i] = buttonNumber;
-                UpdateNotes();
             }
         }
+
+        UpdateNotes();
     }
 
     // Deselect all cells
@@ -168,14 +173,17 @@ public class SudokuGrid : MonoBehaviour
         {
             if (cellsClicked[i])
             {
-                sudokuCells[i].SetMainText("");
+                sudokuCells[i].SetMainText("", true); // technically a valid add
                 cellDigits[i] = 0;
                 sudokuCells[i].Deselect();
                 cellsClicked[i] = false;
             }
         }
+
+        UpdateNotes();
     }
 
+    // Resizes the cell prefab and updates the grid center Vector3
     private void ResizeCellAndCenter()
     {
         float orthographicSize = mainCamera.orthographicSize;
@@ -193,6 +201,7 @@ public class SudokuGrid : MonoBehaviour
         gridCenter = new Vector3(gridCenterX, mainCamera.transform.position.y, mainCamera.transform.position.z);
     }
 
+    // Updates/Clears each cell's notes based on current digits in cells
     private void UpdateNotes()
     {
         SudokuRules sudokuRules = new SudokuRules(cellDigits);
@@ -200,6 +209,8 @@ public class SudokuGrid : MonoBehaviour
         {
             if (cellDigits[i] == 0)
                 sudokuCells[i].SetNoteText(sudokuRules.notesGrid[i]);
+            else
+                sudokuCells[i].ClearNoteText();
         }
     }
 }

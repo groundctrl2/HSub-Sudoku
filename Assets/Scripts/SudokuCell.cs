@@ -14,6 +14,10 @@ public class SudokuCell : MonoBehaviour
     private TextMeshProUGUI middleText;
     private TextMeshProUGUI lowerText;
 
+    private Color mainColor = Color.black;
+    private Color noteColor;
+    private Color incorrectColor;
+
     private static bool isSelecting = false;
     private static bool isDeselecting = false;
     private static bool isMouseDragging = false;
@@ -34,15 +38,34 @@ public class SudokuCell : MonoBehaviour
         middleText = middleTextComponent;
         lowerText = lowerTextComponent;
 
+        // Set materials
         normal = grid.materials[0];
         hovered = grid.materials[1];
         selected = grid.materials[2];
+
+        // Set colors
+        noteColor = grid.noteColor;
+        if (noteColor.a == 0)
+            noteColor.a = 1; // Set alpha to 1 if necessary (fully opaque)
+        incorrectColor = grid.incorrectColor;
+        if (incorrectColor.a == 0)
+            incorrectColor.a = 1; // Set alpha to 1 if necessary (fully opaque)
+
+        SetColor(upperText, noteColor);
+        SetColor(middleText, noteColor);
+        SetColor(lowerText, noteColor);
     }
 
     // Set the cell's text
-    public void SetMainText(string text)
+    public void SetMainText(string text, bool isValid)
     {
         mainText.text = text;
+
+        // Set to incorrect color if conflicting digit
+        if (isValid)
+            SetColor(mainText, mainColor);
+        else
+            SetColor(mainText, incorrectColor);
 
         // Wipe out notes if adding a digit
         if (text != "")
@@ -64,11 +87,11 @@ public class SudokuCell : MonoBehaviour
         {
             int number = i + 1; // "Calculate" the number from the index
             if (number <= 3)
-                upperString += notes[i] ? number + " " : "  ";
+                upperString += notes[i] ? number + "  " : "   ";
             else if (number <= 6)
-                middleString += notes[i] ? number + " " : "  ";
+                middleString += notes[i] ? number + "  " : "   ";
             else
-                lowerString += notes[i] ? number + " " : "  ";
+                lowerString += notes[i] ? number + "  " : "   ";
         }
 
         // Trim any trailing spaces
@@ -82,11 +105,26 @@ public class SudokuCell : MonoBehaviour
         lowerText.text = lowerString;
     }
 
+    // Clear the cell's note text
+    public void ClearNoteText()
+    {
+        upperText.text = "";
+        middleText.text = "";
+        lowerText.text = "";
+    }
+
     // Set the cell's material and bool value whether the cell is selected
     public void SetMaterial(Material material)
     {
         GetComponent<Renderer>().material = material;
         isSelected = (material == selected) ? true : false;
+    }
+
+    // Set a TMP text's color
+    private void SetColor(TextMeshProUGUI text, Color color)
+    {
+        text.color = color;
+        text.fontMaterial.SetColor("_OutlineColor", color);
     }
 
     // Reset select bool values, set the material to normal, and update the grid's selected record
