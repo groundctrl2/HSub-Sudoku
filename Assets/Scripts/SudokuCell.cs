@@ -2,13 +2,17 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using System.Net;
 
 public class SudokuCell : MonoBehaviour
 {
     public SudokuGrid grid;
     public int index;
     public Vector3 position;
-    private TextMeshProUGUI cellText;
+    private TextMeshProUGUI mainText;
+    private TextMeshProUGUI upperText;
+    private TextMeshProUGUI middleText;
+    private TextMeshProUGUI lowerText;
 
     private static bool isSelecting = false;
     private static bool isDeselecting = false;
@@ -19,23 +23,39 @@ public class SudokuCell : MonoBehaviour
     Material hovered;
     Material selected;
 
-    public void Initialize(SudokuGrid newGrid, int newIndex, Vector3 newPosition, TextMeshProUGUI textComponent)
+    public void Initialize(SudokuGrid newGrid, int newIndex, Vector3 newPosition, TextMeshProUGUI mainTextComponent, TextMeshProUGUI upperTextComponent, TextMeshProUGUI middleTextComponent, TextMeshProUGUI lowerTextComponent)
     {
         grid = newGrid;
         index = newIndex;
         position = newPosition;
         transform.position = position;
-        cellText = textComponent;
+        mainText = mainTextComponent;
+        upperText = upperTextComponent;
+        middleText = middleTextComponent;
+        lowerText = lowerTextComponent;
 
         normal = grid.materials[0];
         hovered = grid.materials[1];
         selected = grid.materials[2];
+
+        SetNoteText("test");
     }
 
     // Set the cell's text
-    public void SetText(string text)
+    public void SetMainText(string text)
     {
-        cellText.text = text;
+        mainText.text = text;
+        upperText.text = "";
+        middleText.text = "";
+        lowerText.text = "";
+    }
+
+    // Set the cell's note text
+    public void SetNoteText(string text)
+    {
+        upperText.text = "1 2 3";
+        middleText.text = "4 5 6";
+        lowerText.text = "7 8 9";
     }
 
     // Set the cell's material and bool value whether the cell is selected

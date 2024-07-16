@@ -5,13 +5,15 @@ using UnityEditor.SceneManagement;
 using UnityEditor.U2D.Aseprite;
 using UnityEngine;
 using TMPro;
+using UnityEngine.SocialPlatforms;
 
 public class SudokuGrid : MonoBehaviour
 {
-    public Canvas canvas;
-    public GameObject cellsParent;
+    public Camera mainCamera;
+    public GameObject cellParent;
     public GameObject cellPrefab;
-    public GameObject cellTextPrefab;
+    public GameObject mainTextPrefab;
+    public GameObject noteTextPrefab;
     public Material[] materials = new Material[3];
 
     private Vector3 gridCenter;
@@ -20,6 +22,7 @@ public class SudokuGrid : MonoBehaviour
 
     private bool[] cellsClicked = new bool[81];
     private int[] cellValues = new int[81];
+    private float cellSize; // Set in ResizeCellAndCenter()
 
     // Start is called before the first frame update
     void Start()
@@ -83,21 +86,47 @@ public class SudokuGrid : MonoBehaviour
         for (int i = 0; i < cellPositions.Length; i++)
         {
             Vector3 position = cellPositions[i];
+            Vector2 noteSize = new Vector2(cellSize * 12, cellSize * 3);
 
             // Create cell GameObject
             GameObject cell = Instantiate(cellPrefab, position, Quaternion.identity);
-            cell.transform.SetParent(cellsParent.transform, true); // Ensure cell is parented to the canvas's cells GameObject
+            cell.transform.SetParent(cellParent.transform, true); // Ensure cell is parented to the canvas's cells GameObject
+            cell.transform.localPosition = new Vector3(position.x, position.y, 0); // Set the position explicitly
             cell.AddComponent<BoxCollider>();
 
-            // Add the text GameObject
-            GameObject cellText = Instantiate(cellTextPrefab, cell.transform);
-            cellText.transform.SetParent(cell.transform, false); // Ensure cell text is parented to the cell
-            RectTransform rectTransform = cellText.GetComponent<RectTransform>();
-            rectTransform.anchoredPosition = Vector2.zero;
+            Debug.Log($"Cell {i} World Position: {cell.transform.position}, Local Position: {cell.transform.localPosition}");
+
+            // Add the main text GameObject
+            GameObject mainText = Instantiate(mainTextPrefab, cell.transform);
+            mainText.transform.SetParent(cell.transform, false); // Ensure cell text is parented to the cell
+            RectTransform mainRectTransform = mainText.GetComponent<RectTransform>();
+            mainRectTransform.anchoredPosition = Vector2.zero;
+
+            // Add the upper note text GameObject
+            GameObject upperText = Instantiate(noteTextPrefab, cell.transform);
+            upperText.transform.SetParent(cell.transform, false); // Ensure cell text is parented to the cell
+            RectTransform upperRectTransform = upperText.GetComponent<RectTransform>();
+            upperRectTransform.pivot = new Vector2(0.5f, 1f); // Anchor to top
+            upperRectTransform.anchoredPosition = new Vector2(0, cellSize / 12); // Position at the top
+            upperRectTransform.sizeDelta = noteSize; // Set the width to match the cell width
+
+            // Add the middle note text GameObject
+            GameObject middleText = Instantiate(noteTextPrefab, cell.transform);
+            middleText.transform.SetParent(cell.transform, false); // Ensure cell text is parented to the cell
+            RectTransform middleRectTransform = middleText.GetComponent<RectTransform>();
+            middleRectTransform.anchoredPosition = Vector2.zero;
+            middleRectTransform.sizeDelta = noteSize; // Set the width to match the cell width
+
+            // Add the lower note text GameObject
+            GameObject lowerText = Instantiate(noteTextPrefab, cell.transform);
+            lowerText.transform.SetParent(cell.transform, false); // Ensure cell text is parented to the cell
+            RectTransform lowerRectTransform = lowerText.GetComponent<RectTransform>();
+            lowerRectTransform.anchoredPosition = new Vector2(0, -cellSize / 16); // Position at the bottom
+            lowerRectTransform.sizeDelta = noteSize; // Set the width to match the cell width
 
             // Create SudokuCell
             SudokuCell sudokuCell = cell.AddComponent<SudokuCell>();
-            sudokuCell.Initialize(this, i, position, cellText.GetComponent<TextMeshProUGUI>());
+            sudokuCell.Initialize(this, i, position, mainText.GetComponent<TextMeshProUGUI>(), upperText.GetComponent<TextMeshProUGUI>(), middleText.GetComponent<TextMeshProUGUI>(), lowerText.GetComponent<TextMeshProUGUI>());
             sudokuCells[i] = sudokuCell; // Store SudokuCell
         }
     }
@@ -118,7 +147,7 @@ public class SudokuGrid : MonoBehaviour
         {
             if (cellsClicked[i])
             {
-                sudokuCells[i].SetText($"{buttonNumber}");
+                sudokuCells[i].SetMainText($"{buttonNumber}");
                 cellValues[i] = buttonNumber;
             }
         }
@@ -138,7 +167,7 @@ public class SudokuGrid : MonoBehaviour
         {
             if (cellsClicked[i])
             {
-                sudokuCells[i].SetText("");
+                sudokuCells[i].SetMainText("");
                 cellValues[i] = 0;
                 sudokuCells[i].Deselect();
                 cellsClicked[i] = false;
@@ -148,18 +177,18 @@ public class SudokuGrid : MonoBehaviour
 
     private void ResizeCellAndCenter()
     {
-        // Calculate cell size based on canvas size and ratio
-        RectTransform canvasRect = canvas.GetComponent<RectTransform>();
-        float canvasWidth = canvasRect.rect.width;
-        float cellSizeRatio = 0.0067f; // Ratio of the cell size to the canvas size
-        float cellSize = canvasWidth * cellSizeRatio;
+        float orthographicSize = mainCamera.orthographicSize;
+        float aspectRatio = mainCamera.aspect;
+        float cameraWidth = orthographicSize * aspectRatio;
+        float cellSizeRatio = 0.1f; // Ratio of the cell size to the canvas size
+        cellSize = cameraWidth * cellSizeRatio;
 
         // Resize the cell prefab
         Vector3 cellScale = new Vector3(cellSize, cellSize, cellPrefab.transform.localScale.z);
         cellPrefab.transform.localScale = cellScale;
 
-        // 
-        float gridCenterX = canvasRect.position.x - canvasRect.rect.width / 35;
-        gridCenter = new Vector3(gridCenterX, canvasRect.position.y, canvasRect.position.z);
+        // Set the grid center
+        float gridCenterX = mainCamera.transform.position.x - cameraWidth / 2.3f;
+        gridCenter = new Vector3(gridCenterX, mainCamera.transform.position.y, mainCamera.transform.position.z);
     }
 }
