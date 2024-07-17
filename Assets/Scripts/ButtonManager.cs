@@ -6,31 +6,46 @@ using UnityEngine.UI;
 public class ButtonManager : MonoBehaviour
 {
     public SudokuGrid grid;
-    public Button[] buttons = new Button[12];
+    public Button[] clickButtons = new Button[11];
+    public Button[] toggleButtons = new Button[2];
+    public Color normalColor;
+    public Color toggleColor;
+    private bool[] toggleButtonValues;
 
     // Start is called before the first frame update
     void Start()
     {
-        for (int i = 0; i < buttons.Length; i++)
+        // Adjust colors
+        if (normalColor.a == 0)
+            normalColor.a = 1; // Set alpha to 1 if necessary (fully opaque)
+        if (toggleColor.a == 0)
+            toggleColor.a = 1; // Set alpha to 1 if necessary (fully opaque)
+
+
+        // Click buttons
+        for (int i = 0; i < clickButtons.Length; i++)
         {
             int index = i; // Create a local copy of the loop variable
-            buttons[i].onClick.AddListener(() => OnButtonClick(index));
+            clickButtons[i].onClick.AddListener(() => OnButtonClick(index));
+        }
+
+        // Toggle buttons
+        toggleButtonValues = new bool[toggleButtons.Length];
+        for (int i = 0; i < toggleButtons.Length; i++)
+        {
+            toggleButtonValues[i] = false;
+            int index = i; // Create a local copy of the loop variable
+            toggleButtons[i].onClick.AddListener(() => OnButtonToggle(index));
         }
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
-
-    // Method to handle button click
+    // Method to handle click buttons
     public void OnButtonClick(int buttonIndex)
     {
         StartCoroutine(ButtonClickRoutine(buttonIndex));
     }
 
-    // Coroutine that sets all clicked cells text to set number
+    // Coroutine for all click buttons
     IEnumerator ButtonClickRoutine(int buttonIndex)
     {
         // Number buttons
@@ -43,12 +58,42 @@ public class ButtonManager : MonoBehaviour
         else if (buttonIndex == 9)
             grid.ClearSelected();
         // Deselect button
-        else if (buttonIndex == 10)
+        else // if (buttonIndex == 10)
             grid.DeselectAll();
+
+        yield return new WaitForSeconds(0f);
+    }
+
+    // Method to handle toggle buttons
+    public void OnButtonToggle(int buttonIndex)
+    {
+        StartCoroutine(ButtonToggleRoutine(buttonIndex));
+    }
+
+    // Coroutine for all toggle buttons
+    IEnumerator ButtonToggleRoutine(int buttonIndex)
+    {
+        // Toggle color
+        ToggleColor(buttonIndex);
+
         // Note toggle button
-        else
+        if (buttonIndex == 0)
             grid.ToggleSeeNotes();
 
         yield return new WaitForSeconds(0f);
+    }
+
+    // Toggle color of given button (by index of toggled button array)
+    public void ToggleColor(int buttonIndex)
+    {
+        if (toggleButtonValues[buttonIndex])
+        {
+            toggleButtons[buttonIndex].GetComponent<Image>().color = normalColor;
+        }
+        else
+        {
+            toggleButtons[buttonIndex].GetComponent<Image>().color = toggleColor;
+        }
+        toggleButtonValues[buttonIndex] = !toggleButtonValues[buttonIndex];
     }
 }

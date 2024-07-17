@@ -40,12 +40,6 @@ public class SudokuGrid : MonoBehaviour
         }
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
-
     // Calculates and stores (by index) all 81 cell positions based on cell prefab size
     private void GetCellPositions()
     {

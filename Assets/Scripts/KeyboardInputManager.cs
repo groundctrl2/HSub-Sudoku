@@ -5,6 +5,14 @@ using UnityEngine;
 public class KeyboardInputManager : MonoBehaviour
 {
     public SudokuGrid grid;
+    private ButtonManager buttonManager;
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        // Get the ButtonManager component attached to the same GameObject
+        buttonManager = GetComponent<ButtonManager>();
+    }
 
     // Update is called once per frame
     void Update()
@@ -28,6 +36,6 @@ public class KeyboardInputManager : MonoBehaviour
 
         // Key N operates same as notes button
         if (Input.GetKeyDown(KeyCode.N))
-            grid.ToggleSeeNotes();
+            buttonManager.toggleButtons[0].onClick.Invoke(); // Note button index 
     }
 }
