@@ -143,6 +143,7 @@ public class SudokuGrid : MonoBehaviour
         {
             if (cellsClicked[i])
             {
+                // If input same digit as current, clear cell
                 if (buttonNumber == cellDigits[i])
                     ClearCell(i);
                 else
@@ -184,7 +185,7 @@ public class SudokuGrid : MonoBehaviour
         UpdateNotes();
     }
 
-    // Clear the given number value to the selected cell's text and recorded value
+    // Clear the given number value to the selected cell's text and recorded value (doesn't deselect)
     private void ClearCell(int index)
     {
         sudokuCells[index].SetMainText("", true); // technically a valid add

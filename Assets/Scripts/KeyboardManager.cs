@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class KeyboardInputManager : MonoBehaviour
+public class KeyboardManager : MonoBehaviour
 {
     public SudokuGrid grid;
     private ButtonManager buttonManager;

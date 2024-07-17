@@ -54,7 +54,7 @@ public class SudokuCell : MonoBehaviour
             incorrectColor.a = 1; // Set alpha to 1 if necessary (fully opaque)
 
         SetColor(upperText, noteColor);
-        SetColor(middleText, noteColor);
+        SetColor(middleText, mainColor);
         SetColor(lowerText, noteColor);
     }
 
@@ -84,7 +84,7 @@ public class SudokuCell : MonoBehaviour
         isShowingNotes = !isShowingNotes;
     }
 
-    // Set the cell's note text
+    // Set the cell's note and hidden subset text
     public void SetNoteText(bool[] notes)
     {
         string upperString = "";
@@ -93,21 +93,17 @@ public class SudokuCell : MonoBehaviour
 
         if (isShowingNotes)
         {
+            List<int> noteDigits = new List<int>();
             for (int i = 0; i < 9; i++)
-            {
-                int number = i + 1; // "Calculate" the number from the index
-                if (number <= 3)
-                    upperString += notes[i] ? number + "  " : "   ";
-                else if (number <= 6)
-                    middleString += notes[i] ? number + "  " : "   ";
-                else
-                    lowerString += notes[i] ? number + "  " : "   ";
-            }
+                if (notes[i]) noteDigits.Add(i + 1); // Store each digit (+1 because zero-indexed)
 
-            // Trim any trailing spaces
-            upperString = upperString.Trim();
-            middleString = middleString.Trim();
-            lowerString = lowerString.Trim();
+            foreach (int digit in noteDigits)
+            {
+                if (digit <= 5)
+                    upperString = upperString + digit.ToString();
+                else
+                    lowerString = lowerString + digit.ToString();
+            }
         }
 
         // Set the text properties
