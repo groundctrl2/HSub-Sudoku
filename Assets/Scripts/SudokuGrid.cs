@@ -216,4 +216,10 @@ public class SudokuGrid : MonoBehaviour
         SudokuCell.ToggleSeeNotes();
         UpdateNotes();
     }
+
+    // Toggle whether you can select in multiple clicks without resetting
+    public void ToggleMultiSelect()
+    {
+        SudokuCell.ToggleMultiSelect();
+    }
 }

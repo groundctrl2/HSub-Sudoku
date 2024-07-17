@@ -34,8 +34,12 @@ public class KeyboardInputManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.D))
             grid.DeselectAll();
 
-        // Key N operates same as notes button
+        // Key N triggers the notes button
         if (Input.GetKeyDown(KeyCode.N))
             buttonManager.toggleButtons[0].onClick.Invoke(); // Note button index 
+
+        // Key M triggers the multiselect button    
+        if (Input.GetKeyDown(KeyCode.M))
+            buttonManager.toggleButtons[1].onClick.Invoke(); // Multiselect button index 
     }
 }

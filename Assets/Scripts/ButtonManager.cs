@@ -74,18 +74,6 @@ public class ButtonManager : MonoBehaviour
     IEnumerator ButtonToggleRoutine(int buttonIndex)
     {
         // Toggle color
-        ToggleColor(buttonIndex);
-
-        // Note toggle button
-        if (buttonIndex == 0)
-            grid.ToggleSeeNotes();
-
-        yield return new WaitForSeconds(0f);
-    }
-
-    // Toggle color of given button (by index of toggled button array)
-    public void ToggleColor(int buttonIndex)
-    {
         if (toggleButtonValues[buttonIndex])
         {
             toggleButtons[buttonIndex].GetComponent<Image>().color = normalColor;
@@ -95,5 +83,13 @@ public class ButtonManager : MonoBehaviour
             toggleButtons[buttonIndex].GetComponent<Image>().color = toggleColor;
         }
         toggleButtonValues[buttonIndex] = !toggleButtonValues[buttonIndex];
+
+        // Note toggle button
+        if (buttonIndex == 0)
+            grid.ToggleSeeNotes();
+        else // (buttonIndex == 1)
+            grid.ToggleMultiSelect();
+
+        yield return new WaitForSeconds(0f);
     }
 }

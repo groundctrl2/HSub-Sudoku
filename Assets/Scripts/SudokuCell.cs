@@ -18,6 +18,7 @@ public class SudokuCell : MonoBehaviour
     private Color noteColor;
     private Color incorrectColor;
 
+    private static bool isMultiSelecting = false;
     private static bool isShowingNotes = false;
     private static bool isSelecting = false;
     private static bool isDeselecting = false;
@@ -146,22 +147,49 @@ public class SudokuCell : MonoBehaviour
         grid.SetSelected(index, false);
     }
 
+    // Toggle whether you can select in multiple clicks without resetting
+    public static void ToggleMultiSelect()
+    {
+        isMultiSelecting = !isMultiSelecting;
+    }
+
     // Select/Deselect cell and start dragging
     void OnMouseDown()
     {
         if (!isMouseDragging)
         {
-            if (!isSelected)
+            // If multiselecting, can select with multiple mouse downs
+            if (isMultiSelecting)
             {
-                isSelecting = true;
-                SetMaterial(selected);
-                grid.SetSelected(index, true);
+                if (!isSelected)
+                {
+                    isSelecting = true;
+                    SetMaterial(selected);
+                    grid.SetSelected(index, true);
+                }
+                else
+                {
+                    isDeselecting = true;
+                    SetMaterial(hovered);
+                    grid.SetSelected(index, false);
+                }
             }
+            // If not multiselecting, only allow one selection per mouse down
             else
             {
-                isDeselecting = true;
-                SetMaterial(hovered);
-                grid.SetSelected(index, false);
+                if (!isSelected)
+                {
+                    grid.DeselectAll();
+                    isSelecting = true;
+                    SetMaterial(selected);
+                    grid.SetSelected(index, true);
+                }
+                else
+                {
+                    isDeselecting = true;
+                    SetMaterial(normal);
+                    grid.SetSelected(index, false);
+                }
             }
         }
     }
