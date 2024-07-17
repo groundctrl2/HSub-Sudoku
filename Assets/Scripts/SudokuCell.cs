@@ -158,7 +158,7 @@ public class SudokuCell : MonoBehaviour
     {
         if (!isMouseDragging)
         {
-            // If multiselecting, can select with multiple mouse downs
+            // If multiselecting, can continue to select with multiple mouse downs
             if (isMultiSelecting)
             {
                 if (!isSelected)

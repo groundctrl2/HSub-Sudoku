@@ -143,12 +143,17 @@ public class SudokuGrid : MonoBehaviour
         {
             if (cellsClicked[i])
             {
-                // Check whether valid add
-                SudokuRules sudokuRules = new SudokuRules(cellDigits);
-                bool isValid = sudokuRules.IsValidMove(i, buttonNumber);
+                if (buttonNumber == cellDigits[i])
+                    ClearCell(i);
+                else
+                {
+                    // Check whether valid add
+                    SudokuRules sudokuRules = new SudokuRules(cellDigits);
+                    bool isValid = sudokuRules.IsValidMove(i, buttonNumber);
 
-                sudokuCells[i].SetMainText($"{buttonNumber}", isValid);
-                cellDigits[i] = buttonNumber;
+                    sudokuCells[i].SetMainText($"{buttonNumber}", isValid);
+                    cellDigits[i] = buttonNumber;
+                }
             }
         }
 
@@ -176,6 +181,14 @@ public class SudokuGrid : MonoBehaviour
             }
         }
 
+        UpdateNotes();
+    }
+
+    // Clear the given number value to the selected cell's text and recorded value
+    private void ClearCell(int index)
+    {
+        sudokuCells[index].SetMainText("", true); // technically a valid add
+        cellDigits[index] = 0;
         UpdateNotes();
     }
 
