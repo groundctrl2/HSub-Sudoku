@@ -129,6 +129,8 @@ public class SudokuGrid : MonoBehaviour
             sudokuCell.Initialize(this, i, position, mainText.GetComponent<TextMeshProUGUI>(), upperText.GetComponent<TextMeshProUGUI>(), middleText.GetComponent<TextMeshProUGUI>(), lowerText.GetComponent<TextMeshProUGUI>());
             sudokuCells[i] = sudokuCell; // Store SudokuCell
         }
+
+        UpdateNotes();
     }
 
     // Set whether a cell at given index is selected
@@ -212,5 +214,12 @@ public class SudokuGrid : MonoBehaviour
             else
                 sudokuCells[i].ClearNoteText();
         }
+    }
+
+    // Toggle whether you can see notes. Update them if you can, clear them if you can't.
+    public void ToggleSeeNotes()
+    {
+        SudokuCell.ToggleSeeNotes();
+        UpdateNotes();
     }
 }

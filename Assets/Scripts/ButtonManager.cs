@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class ButtonManager : MonoBehaviour
 {
     public SudokuGrid grid;
-    public Button[] buttons = new Button[11];
+    public Button[] buttons = new Button[12];
 
     // Start is called before the first frame update
     void Start()
@@ -43,10 +43,11 @@ public class ButtonManager : MonoBehaviour
         else if (buttonIndex == 9)
             grid.ClearSelected();
         // Deselect button
-        else
-        {
+        else if (buttonIndex == 10)
             grid.DeselectAll();
-        }
+        // Note toggle button
+        else
+            grid.ToggleSeeNotes();
 
         yield return new WaitForSeconds(0f);
     }

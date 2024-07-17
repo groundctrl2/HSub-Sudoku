@@ -18,6 +18,7 @@ public class SudokuCell : MonoBehaviour
     private Color noteColor;
     private Color incorrectColor;
 
+    private static bool isShowingNotes = false;
     private static bool isSelecting = false;
     private static bool isDeselecting = false;
     private static bool isMouseDragging = false;
@@ -76,6 +77,12 @@ public class SudokuCell : MonoBehaviour
         }
     }
 
+    // Toggle isShowingNotes bool and returns value
+    public static void ToggleSeeNotes()
+    {
+        isShowingNotes = !isShowingNotes;
+    }
+
     // Set the cell's note text
     public void SetNoteText(bool[] notes)
     {
@@ -83,21 +90,24 @@ public class SudokuCell : MonoBehaviour
         string middleString = "";
         string lowerString = "";
 
-        for (int i = 0; i < 9; i++)
+        if (isShowingNotes)
         {
-            int number = i + 1; // "Calculate" the number from the index
-            if (number <= 3)
-                upperString += notes[i] ? number + "  " : "   ";
-            else if (number <= 6)
-                middleString += notes[i] ? number + "  " : "   ";
-            else
-                lowerString += notes[i] ? number + "  " : "   ";
-        }
+            for (int i = 0; i < 9; i++)
+            {
+                int number = i + 1; // "Calculate" the number from the index
+                if (number <= 3)
+                    upperString += notes[i] ? number + "  " : "   ";
+                else if (number <= 6)
+                    middleString += notes[i] ? number + "  " : "   ";
+                else
+                    lowerString += notes[i] ? number + "  " : "   ";
+            }
 
-        // Trim any trailing spaces
-        upperString = upperString.Trim();
-        middleString = middleString.Trim();
-        lowerString = lowerString.Trim();
+            // Trim any trailing spaces
+            upperString = upperString.Trim();
+            middleString = middleString.Trim();
+            lowerString = lowerString.Trim();
+        }
 
         // Set the text properties
         upperText.text = upperString;
