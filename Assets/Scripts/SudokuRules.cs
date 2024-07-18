@@ -36,6 +36,7 @@ public class SudokuRules
         return newNotesGrid;
     }
 
+    // Clear all notes in given cell except for the added digit
     public void ClearCellNotes(int index, int digit)
     {
         for (int i = 0; i < 9; i++)

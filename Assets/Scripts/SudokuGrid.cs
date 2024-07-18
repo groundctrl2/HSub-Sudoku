@@ -26,18 +26,15 @@ public class SudokuGrid : MonoBehaviour
     private int[] cellDigits = new int[81];
     private float cellSize; // Set in ResizeCellAndCenter()
 
+    private SudokuRules sudokuRules;
+    private HSubRules hSubRules;
+
     // Start is called before the first frame update
     void Start()
     {
         ResizeCellAndCenter();
         GetCellPositions();
         DrawGrid();
-
-        for (int i = 0; i < 81; i++)
-        {
-            cellsClicked[i] = false;
-            cellDigits[i] = 0;
-        }
     }
 
     // Calculates and stores (by index) all 81 cell positions based on cell prefab size
@@ -214,7 +211,7 @@ public class SudokuGrid : MonoBehaviour
     // Updates/Clears each cell's notes based on current digits in cells
     private void UpdateNotes()
     {
-        SudokuRules sudokuRules = new SudokuRules(cellDigits);
+        sudokuRules = new SudokuRules(cellDigits);
         for (int i = 0; i < 81; i++)
         {
             if (cellDigits[i] == 0)
@@ -226,7 +223,7 @@ public class SudokuGrid : MonoBehaviour
             }
         }
 
-        HSubRules hSubRules = new HSubRules(sudokuRules.notesGrid);
+        hSubRules = new HSubRules(sudokuRules.notesGrid);
     }
 
     // Toggle whether you can see notes. Update them if you can, clear them if you can't.
