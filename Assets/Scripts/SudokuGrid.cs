@@ -220,8 +220,13 @@ public class SudokuGrid : MonoBehaviour
             if (cellDigits[i] == 0)
                 sudokuCells[i].SetNoteText(sudokuRules.notesGrid[i]);
             else
+            {
                 sudokuCells[i].ClearNoteText();
+                sudokuRules.ClearCellNotes(i, cellDigits[i]);
+            }
         }
+
+        HSubRules hSubRules = new HSubRules(sudokuRules.notesGrid);
     }
 
     // Toggle whether you can see notes. Update them if you can, clear them if you can't.

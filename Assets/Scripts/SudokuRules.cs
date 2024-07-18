@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -33,6 +34,12 @@ public class SudokuRules
             }
         }
         return newNotesGrid;
+    }
+
+    public void ClearCellNotes(int index, int digit)
+    {
+        for (int i = 0; i < 9; i++)
+            notesGrid[index][i] = i + 1 == digit ? true : false;
     }
 
     // 2D input method to check if placing a digit is valid according to Sudoku rules
@@ -78,7 +85,7 @@ public class SudokuRules
     }
 
     // Helper method to get a 2D grid (size 9x9) from given 1D grid (size 81)
-    public int[][] ConvertTo2D(int[] oneDGrid)
+    public static int[][] ConvertTo2D(int[] oneDGrid)
     {
         int[][] twoDGrid = new int[9][];
         for (int i = 0; i < 9; i++)
@@ -94,7 +101,7 @@ public class SudokuRules
     }
 
     // Helper method to get a 1D grid (size 81) from given 1D grid (size 9x9)
-    public int[] ConvertTo1D(int[][] twoDGrid)
+    public static int[] ConvertTo1D(int[][] twoDGrid)
     {
         int[] oneDGrid = new int[81];
         for (int i = 0; i < 9; i++)
@@ -106,5 +113,62 @@ public class SudokuRules
             }
         }
         return oneDGrid;
+    }
+
+    // Gets a given row from the array of 81 cell lists 'hsubGrid'
+    public static int[] GetRow(int rowIndex)
+    {
+        int[] row = new int[9];
+        for (int i = 0; i < 9; i++)
+            row[i] = Get1DIndex(rowIndex, i);
+
+        return row;
+    }
+
+    // Gets a given col from the array of 81 cell lists 'hsubGrid'
+    public static int[] GetCol(int colIndex)
+    {
+        int[] col = new int[9];
+        for (int i = 0; i < 9; i++)
+            col[i] = Get1DIndex(i, colIndex);
+
+        return col;
+    }
+
+    // Gets a given subgrid from the array of 81 cell lists 'hsubGrid' (subgridNumber's range 1-9 top-left to bottom-right)
+    public static int[] GetSubGrid(int subgridNumber)
+    {
+        int[] subGrid = new int[9];
+        int index = 0;
+
+        // Calculate the starting row and column indices based on the box number
+        int subGridRow = (subgridNumber - 1) / 3;
+        int subGridCol = (subgridNumber - 1) % 3;
+
+        for (int i = 0; i < 3; i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                int row = subGridRow * 3 + i;
+                int col = subGridCol * 3 + j;
+                subGrid[index++] = Get1DIndex(row, col);
+            }
+        }
+
+        return subGrid;
+    }
+
+    // Method to convert 2D array index to 1D array index
+    public static int Get1DIndex(int rowIndex, int colIndex)
+    {
+        return rowIndex * 9 + colIndex;
+    }
+
+    // Method to convert 1D array index to 2D array/tuple index
+    public static (int rowIndex, int colIndex) Get2DIndex(int index)
+    {
+        int rowIndex = index / 9;
+        int colIndex = index % 9;
+        return (rowIndex, colIndex);
     }
 }
