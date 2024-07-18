@@ -7,13 +7,13 @@ using UnityEngine.Rendering;
 
 public class SudokuRules
 {
-    private int[][] grid;
+    private int[] grid;
     public bool[][] notesGrid;
 
     // Constructor to initialize with the current 1D grid state
     public SudokuRules(int[] currentGrid)
     {
-        grid = ConvertTo2D(currentGrid);
+        grid = currentGrid;
         notesGrid = GetNotes();
     }
 
@@ -46,7 +46,7 @@ public class SudokuRules
     // 2D input method to check if placing a digit is valid according to Sudoku rules
     public bool IsValidMove(int rowIndex, int colIndex, int digit)
     {
-        return IsRowValid(rowIndex, digit) && IsColValid(colIndex, digit) && IsSubgridValid(rowIndex, colIndex, digit);
+        return IsRowValid(rowIndex, digit) && IsColValid(colIndex, digit) && IsSubGridValid(rowIndex, colIndex, digit);
     }
 
     // 1D input method to check if placing a digit is valid according to Sudoku rules
@@ -55,65 +55,40 @@ public class SudokuRules
         int rowIndex = index / 9;
         int colIndex = index % 9;
 
-        return IsRowValid(rowIndex, digit) && IsColValid(colIndex, digit) && IsSubgridValid(rowIndex, colIndex, digit);
+        return IsRowValid(rowIndex, digit) && IsColValid(colIndex, digit) && IsSubGridValid(rowIndex, colIndex, digit);
     }
 
     // Helper method to check if the digit is valid in the given row
     private bool IsRowValid(int rowIndex, int digit)
     {
-        return !grid[rowIndex].Any(cell => cell == digit);
+        int[] rowIndices = GetRow(rowIndex);
+
+        foreach (int index in rowIndices)
+            if (grid[index] == digit)
+                return false;
+        return true;
     }
 
     // Helper method to check if the digit is valid in the given column
     private bool IsColValid(int colIndex, int digit)
     {
-        return !grid.Any(row => row[colIndex] == digit);
+        int[] colIndices = GetRow(colIndex);
+
+        foreach (int index in colIndices)
+            if (grid[index] == digit)
+                return false;
+        return true;
     }
 
     // Helper method to check if the digit is valid in the 3x3 subgrid
-    private bool IsSubgridValid(int rowIndex, int colIndex, int digit)
+    private bool IsSubGridValid(int rowIndex, int colIndex, int digit)
     {
-        // Determine the starting indices of the 3x3 subgrid
-        int startRow = (rowIndex / 3) * 3; // integer division
-        int startCol = (colIndex / 3) * 3; // integer division
+        int[] subGridIndices = GetSubGrid(rowIndex, colIndex);
 
-        // Iterate over each cell in the 3x3 subgrid
-        for (int i = startRow; i < startRow + 3; i++)
-            for (int j = startCol; j < startCol + 3; j++)
-                if (grid[i][j] == digit)
-                    return false; // Digit is already present in the subgrid
-        return true; // Digit is not present in the subgrid
-    }
-
-    // Helper method to get a 2D grid (size 9x9) from given 1D grid (size 81)
-    public static int[][] ConvertTo2D(int[] oneDGrid)
-    {
-        int[][] twoDGrid = new int[9][];
-        for (int i = 0; i < 9; i++)
-        {
-            twoDGrid[i] = new int[9];
-            for (int j = 0; j < 9; j++)
-            {
-                // Calculate the 1D array index and assign to the 2D array
-                twoDGrid[i][j] = oneDGrid[i * 9 + j];
-            }
-        }
-        return twoDGrid;
-    }
-
-    // Helper method to get a 1D grid (size 81) from given 1D grid (size 9x9)
-    public static int[] ConvertTo1D(int[][] twoDGrid)
-    {
-        int[] oneDGrid = new int[81];
-        for (int i = 0; i < 9; i++)
-        {
-            for (int j = 0; j < 9; j++)
-            {
-                // Calculate the 1D array index and assign from the 2D array
-                oneDGrid[i * 9 + j] = twoDGrid[i][j];
-            }
-        }
-        return oneDGrid;
+        foreach (int index in subGridIndices)
+            if (grid[index] == digit)
+                return false;
+        return true;
     }
 
     // Gets a given row from the array of 81 cell lists 'hsubGrid'
@@ -137,14 +112,14 @@ public class SudokuRules
     }
 
     // Gets a given subgrid from the array of 81 cell lists 'hsubGrid' (subgridNumber's range 1-9 top-left to bottom-right)
-    public static int[] GetSubGrid(int subgridNumber)
+    public static int[] GetSubGrid(int subGridNumber)
     {
         int[] subGrid = new int[9];
         int index = 0;
 
         // Calculate the starting row and column indices based on the box number
-        int subGridRow = (subgridNumber - 1) / 3;
-        int subGridCol = (subgridNumber - 1) % 3;
+        int subGridRow = (subGridNumber - 1) / 3;
+        int subGridCol = (subGridNumber - 1) % 3;
 
         for (int i = 0; i < 3; i++)
         {
@@ -159,13 +134,36 @@ public class SudokuRules
         return subGrid;
     }
 
-    // Method to convert 2D array index to 1D array index
+    // Gets a given subgrid from the array of 81 cell lists 'hsubGrid' using rowIndex and colIndex
+    public static int[] GetSubGrid(int rowIndex, int colIndex)
+    {
+        int[] subGrid = new int[9];
+        int index = 0;
+
+        // Calculate the starting row and column indices based on the given rowIndex and colIndex
+        int subGridRow = (rowIndex / 3) * 3;
+        int subGridCol = (colIndex / 3) * 3;
+
+        for (int i = 0; i < 3; i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                int row = subGridRow + i;
+                int col = subGridCol + j;
+                subGrid[index++] = Get1DIndex(row, col);
+            }
+        }
+
+        return subGrid;
+    }
+
+    // Helper method to convert 2D array index to 1D array index
     public static int Get1DIndex(int rowIndex, int colIndex)
     {
         return rowIndex * 9 + colIndex;
     }
 
-    // Method to convert 1D array index to 2D array/tuple index
+    // Helper method to convert 1D array index to 2D array/tuple index
     public static (int rowIndex, int colIndex) Get2DIndex(int index)
     {
         int rowIndex = index / 9;
