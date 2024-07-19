@@ -72,7 +72,7 @@ public class SudokuRules
     // Helper method to check if the digit is valid in the given column
     private bool IsColValid(int colIndex, int digit)
     {
-        int[] colIndices = GetRow(colIndex);
+        int[] colIndices = GetCol(colIndex);
 
         foreach (int index in colIndices)
             if (grid[index] == digit)
