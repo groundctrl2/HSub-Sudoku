@@ -38,8 +38,12 @@ public class KeyboardManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.N))
             buttonManager.toggleButtons[0].onClick.Invoke(); // Note button index 
 
-        // Key M triggers the multiselect button    
-        if (Input.GetKeyDown(KeyCode.M))
+        // Key S triggers the multiselect button    
+        if (Input.GetKeyDown(KeyCode.S))
             buttonManager.toggleButtons[1].onClick.Invoke(); // Multiselect button index 
+
+        // Key H triggers the hidden subsets button
+        if (Input.GetKeyDown(KeyCode.H))
+            buttonManager.toggleButtons[2].onClick.Invoke(); // Hidden Subsets button index 
     }
 }

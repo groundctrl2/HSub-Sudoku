@@ -7,7 +7,7 @@ public class ButtonManager : MonoBehaviour
 {
     public SudokuGrid grid;
     public Button[] clickButtons = new Button[11];
-    public Button[] toggleButtons = new Button[2];
+    public Button[] toggleButtons = new Button[3];
     public Color normalColor;
     public Color toggleColor;
     private bool[] toggleButtonValues;
@@ -20,7 +20,6 @@ public class ButtonManager : MonoBehaviour
             normalColor.a = 1; // Set alpha to 1 if necessary (fully opaque)
         if (toggleColor.a == 0)
             toggleColor.a = 1; // Set alpha to 1 if necessary (fully opaque)
-
 
         // Click buttons
         for (int i = 0; i < clickButtons.Length; i++)
@@ -84,11 +83,15 @@ public class ButtonManager : MonoBehaviour
         }
         toggleButtonValues[buttonIndex] = !toggleButtonValues[buttonIndex];
 
-        // Note toggle button
+        // Note button
         if (buttonIndex == 0)
             grid.ToggleSeeNotes();
-        else // (buttonIndex == 1)
+        // MultiSelect button
+        else if (buttonIndex == 1)
             grid.ToggleMultiSelect();
+        // Hidden Subsets button
+        else
+            grid.ToggleHiddenSubsets(toggleButtonValues[2]);
 
         yield return new WaitForSeconds(0f);
     }

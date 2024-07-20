@@ -1,23 +1,239 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Data;
 using UnityEngine;
 
 public class HSubRules
 {
-    public List<int>[] hsubGrid = new List<int>[81]; // array of 81 cell note lists
+    public List<int>[] hsubGrid = new List<int>[81]; // Used for computation
+    private List<(int index, int value)> singles;
+    private List<(int index1, int index2, int value1, int value2)> doubles;
+    private List<(int index1, int index2, int index3, int value1, int value2, int value3)> triples;
+    private List<(int index1, int index2, int index3, int index4, int value1, int value2, int value3, int value4)> quadruples;
 
     // Constructor to initialize with the current 1D notes grid state
     public HSubRules(bool[][] currentNotes)
     {
-        // Initialize hsub grid (made of Lists)
+        // Initialize both hsub grids (both made of Lists)
         for (int i = 0; i < currentNotes.Length; i++)
         {
             hsubGrid[i] = new List<int>();
             for (int j = 0; j < currentNotes[i].Length; j++)
                 if (currentNotes[i][j]) hsubGrid[i].Add(j + 1);
         }
+
+        // Find HSubs
+        var allSinglesFound = new List<(int index, int value)>();
+        var allDoublesFound = new List<(int index1, int index2, int value1, int value2)>();
+        var allTriplesFound = new List<(int index1, int index2, int index3, int value1, int value2, int value3)>();
+        var allQuadruplesFound = new List<(int index1, int index2, int index3, int index4, int value1, int value2, int value3, int value4)>();
+
+        // Search each row
+        for (int row = 0; row < 9; row++)
+        {
+            int[] rowIndices = SudokuRules.GetRow(row);
+            var noteGroup = GetNoteGroup(rowIndices);
+            var invertedNoteGroup = InvertNoteGroup(noteGroup);
+            int[] occurrences = CountDigitOccurrences(noteGroup);
+            int[] invertedOccurrences = CountDigitOccurrences(invertedNoteGroup);
+
+            // Get generic index singles (normal & inverted)
+            var genericIndexSingles = GetSingleHSubs(noteGroup, occurrences, false);
+            var genericIndexInvertedSingles = GetSingleHSubs(invertedNoteGroup, invertedOccurrences, true);
+
+            // Convert indices back to original index and add to 'all list'
+            foreach ((int index, int value) tuple in genericIndexSingles)
+                allSinglesFound.Add((rowIndices[tuple.index - 1], tuple.value));
+            foreach ((int index, int value) tuple in genericIndexInvertedSingles)
+                allSinglesFound.Add((rowIndices[tuple.index - 1], tuple.value));
+
+            GetHSubs(rowIndices, noteGroup, invertedNoteGroup, occurrences, invertedOccurrences, ref allDoublesFound, ref allTriplesFound, ref allQuadruplesFound);
+        }
+
+        // Search each column
+        for (int col = 0; col < 9; col++)
+        {
+            int[] colIndices = SudokuRules.GetCol(col);
+            var noteGroup = GetNoteGroup(colIndices);
+            var invertedNoteGroup = InvertNoteGroup(noteGroup);
+            int[] occurrences = CountDigitOccurrences(noteGroup);
+            int[] invertedOccurrences = CountDigitOccurrences(invertedNoteGroup);
+
+            GetHSubs(colIndices, noteGroup, invertedNoteGroup, occurrences, invertedOccurrences, ref allDoublesFound, ref allTriplesFound, ref allQuadruplesFound);
+        }
+
+        // Search each subgrid
+        for (int subgrid = 1; subgrid < 10; subgrid++)
+        {
+            int[] subgridIndices = SudokuRules.GetSubGrid(subgrid);
+            var noteGroup = GetNoteGroup(subgridIndices);
+            var invertedNoteGroup = InvertNoteGroup(noteGroup);
+            int[] occurrences = CountDigitOccurrences(noteGroup);
+            int[] invertedOccurrences = CountDigitOccurrences(invertedNoteGroup);
+
+            GetHSubs(subgridIndices, noteGroup, invertedNoteGroup, occurrences, invertedOccurrences, ref allDoublesFound, ref allTriplesFound, ref allQuadruplesFound);
+        }
+
+        // Store all unique hidden subsets found
+        singles = allSinglesFound.Distinct().ToList();
+        doubles = allDoublesFound.Distinct().ToList();
+        triples = allTriplesFound.Distinct().ToList();
+        quadruples = allQuadruplesFound.Distinct().ToList();
+        UpdateHSubGrid();
+    }
+
+    // Update the hsub grid with the found hidden subsets
+    public void UpdateHSubGrid()
+    {
+        bool[] smallestHSubAdded = new bool[81];
+
+        // Clear the Hidden Subset Grid (computation already complete, ready for display)
+        foreach (var list in hsubGrid)
+            list.Clear();
+
+        // Add singles
+        foreach ((int index, int value) tuple in singles)
+        {
+            if (!smallestHSubAdded[tuple.index])
+            {
+                hsubGrid[tuple.index].Add(tuple.value);
+
+                smallestHSubAdded[tuple.index] = true;
+            }
+        }
+
+        // Add doubles
+        foreach ((int index1, int index2, int value1, int value2) tuple in doubles)
+        {
+            if (!smallestHSubAdded[tuple.index1])
+            {
+                hsubGrid[tuple.index1].Add(tuple.value1);
+                hsubGrid[tuple.index1].Add(tuple.value2);
+
+                smallestHSubAdded[tuple.index1] = true;
+            }
+            if (!smallestHSubAdded[tuple.index2])
+            {
+                hsubGrid[tuple.index2].Add(tuple.value1);
+                hsubGrid[tuple.index2].Add(tuple.value2);
+
+                smallestHSubAdded[tuple.index2] = true;
+            }
+        }
+
+        // Add triples
+        foreach ((int index1, int index2, int index3, int value1, int value2, int value3) tuple in triples)
+        {
+            if (!smallestHSubAdded[tuple.index1])
+            {
+                hsubGrid[tuple.index1].Add(tuple.value1);
+                hsubGrid[tuple.index1].Add(tuple.value2);
+                hsubGrid[tuple.index1].Add(tuple.value3);
+
+                smallestHSubAdded[tuple.index1] = true;
+            }
+            if (!smallestHSubAdded[tuple.index2])
+            {
+                hsubGrid[tuple.index2].Add(tuple.value1);
+                hsubGrid[tuple.index2].Add(tuple.value2);
+                hsubGrid[tuple.index2].Add(tuple.value3);
+
+                smallestHSubAdded[tuple.index2] = true;
+            }
+            if (!smallestHSubAdded[tuple.index3])
+            {
+                hsubGrid[tuple.index3].Add(tuple.value1);
+                hsubGrid[tuple.index3].Add(tuple.value2);
+                hsubGrid[tuple.index3].Add(tuple.value3);
+
+                smallestHSubAdded[tuple.index3] = true;
+            }
+        }
+
+        // Add quadruples
+        foreach ((int index1, int index2, int index3, int index4, int value1, int value2, int value3, int value4) tuple in quadruples)
+        {
+            if (!smallestHSubAdded[tuple.index1])
+            {
+                hsubGrid[tuple.index1].Add(tuple.value1);
+                hsubGrid[tuple.index1].Add(tuple.value2);
+                hsubGrid[tuple.index1].Add(tuple.value3);
+                hsubGrid[tuple.index1].Add(tuple.value4);
+
+                smallestHSubAdded[tuple.index1] = true;
+            }
+            if (!smallestHSubAdded[tuple.index2])
+            {
+                hsubGrid[tuple.index2].Add(tuple.value1);
+                hsubGrid[tuple.index2].Add(tuple.value2);
+                hsubGrid[tuple.index2].Add(tuple.value3);
+                hsubGrid[tuple.index2].Add(tuple.value4);
+
+                smallestHSubAdded[tuple.index2] = true;
+            }
+            if (!smallestHSubAdded[tuple.index3])
+            {
+                hsubGrid[tuple.index3].Add(tuple.value1);
+                hsubGrid[tuple.index3].Add(tuple.value2);
+                hsubGrid[tuple.index3].Add(tuple.value3);
+                hsubGrid[tuple.index3].Add(tuple.value4);
+
+                smallestHSubAdded[tuple.index3] = true;
+            }
+            if (!smallestHSubAdded[tuple.index4])
+            {
+                hsubGrid[tuple.index4].Add(tuple.value1);
+                hsubGrid[tuple.index4].Add(tuple.value2);
+                hsubGrid[tuple.index4].Add(tuple.value3);
+                hsubGrid[tuple.index4].Add(tuple.value4);
+
+                smallestHSubAdded[tuple.index4] = true;
+            }
+        }
+    }
+
+    // Helper method, Finds the Hidden Subsets for Doubles, Triples, and Quadruples (Singles only need to iterated through one group to find)
+    private void GetHSubs(
+    int[] indices,
+    List<int>[] noteGroup,
+    List<int>[] invertedNoteGroup,
+    int[] occurrences,
+    int[] invertedOccurrences,
+    ref List<(int index1, int index2, int value1, int value2)> allDoublesFound,
+    ref List<(int index1, int index2, int index3, int value1, int value2, int value3)> allTriplesFound,
+    ref List<(int index1, int index2, int index3, int index4, int value1, int value2, int value3, int value4)> allQuadruplesFound)
+    {
+        // Get generic index doubles (normal & inverted)
+        var genericIndexDoubles = GetDoubleHSubs(noteGroup, occurrences, false);
+        var genericIndexInvertedDoubles = GetDoubleHSubs(invertedNoteGroup, invertedOccurrences, true);
+
+        // Convert doubles indices back to original index and add to 'all list'
+        foreach ((int index1, int index2, int value1, int value2) tuple in genericIndexDoubles)
+            allDoublesFound.Add((indices[tuple.index1 - 1], indices[tuple.index2 - 1], tuple.value1, tuple.value2));
+        foreach ((int index1, int index2, int value1, int value2) tuple in genericIndexInvertedDoubles)
+            allDoublesFound.Add((indices[tuple.index1 - 1], indices[tuple.index2 - 1], tuple.value1, tuple.value2));
+
+        // Get generic index triples (normal & inverted)
+        var genericIndexTriples = GetTripleHSubs(noteGroup, occurrences, false);
+        var genericIndexInvertedTriples = GetTripleHSubs(invertedNoteGroup, invertedOccurrences, true);
+
+        // Convert triples indices back to original index and add to 'all list'
+        foreach ((int index1, int index2, int index3, int value1, int value2, int value3) tuple in genericIndexTriples)
+            allTriplesFound.Add((indices[tuple.index1 - 1], indices[tuple.index2 - 1], indices[tuple.index3 - 1], tuple.value1, tuple.value2, tuple.value3));
+        foreach ((int index1, int index2, int index3, int value1, int value2, int value3) tuple in genericIndexInvertedTriples)
+            allTriplesFound.Add((indices[tuple.index1 - 1], indices[tuple.index2 - 1], indices[tuple.index3 - 1], tuple.value1, tuple.value2, tuple.value3));
+
+        // Get generic index quadruples (normal & inverted)
+        var genericIndexQuadruples = GetQuadrupleHSubs(noteGroup, occurrences, false);
+        var genericIndexInvertedQuadruples = GetQuadrupleHSubs(invertedNoteGroup, invertedOccurrences, true);
+
+        // Convert quadruples indices back to original index and add to 'all list'
+        foreach ((int index1, int index2, int index3, int index4, int value1, int value2, int value3, int value4) tuple in genericIndexQuadruples)
+            allQuadruplesFound.Add((indices[tuple.index1 - 1], indices[tuple.index2 - 1], indices[tuple.index3 - 1], indices[tuple.index4 - 1], tuple.value1, tuple.value2, tuple.value3, tuple.value4));
+        foreach ((int index1, int index2, int index3, int index4, int value1, int value2, int value3, int value4) tuple in genericIndexInvertedQuadruples)
+            allQuadruplesFound.Add((indices[tuple.index1 - 1], indices[tuple.index2 - 1], indices[tuple.index3 - 1], indices[tuple.index4 - 1], tuple.value1, tuple.value2, tuple.value3, tuple.value4));
     }
 
     // Helper method. Given an array of indices, pulls the corresponding cell lists from the Hidden Subset Grid into its own list

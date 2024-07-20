@@ -28,6 +28,8 @@ public class SudokuGrid : MonoBehaviour
 
     private SudokuRules sudokuRules;
     private HSubRules hSubRules;
+    private List<int>[] hSubs = new List<int>[81];
+    private bool isShowingHSubs = false;
 
     // Start is called before the first frame update
     void Start()
@@ -212,6 +214,7 @@ public class SudokuGrid : MonoBehaviour
     private void UpdateNotes()
     {
         sudokuRules = new SudokuRules(cellDigits);
+
         for (int i = 0; i < 81; i++)
         {
             if (cellDigits[i] == 0)
@@ -223,7 +226,7 @@ public class SudokuGrid : MonoBehaviour
             }
         }
 
-        hSubRules = new HSubRules(sudokuRules.notesGrid);
+        SetHSubs(true);
     }
 
     // Toggle whether you can see notes. Update them if you can, clear them if you can't.
@@ -237,5 +240,36 @@ public class SudokuGrid : MonoBehaviour
     public void ToggleMultiSelect()
     {
         SudokuCell.ToggleMultiSelect();
+    }
+
+    // Toggle whether you can see hidden subsets
+    public void ToggleHiddenSubsets(bool isOn)
+    {
+        isShowingHSubs = isOn;
+        SetHSubs(isOn);
+    }
+
+    // Calculate and set hidden subsets if true, clear if false
+    private void SetHSubs(bool SetOrClear)
+    {
+        // If on, calculate hidden subsets and set text
+        if (SetOrClear && isShowingHSubs)
+        {
+            hSubRules = new HSubRules(sudokuRules.notesGrid);
+
+            for (int i = 0; i < 81; i++)
+            {
+                // If no digit in cell, set hsub text
+                if (cellDigits[i] == 0)
+                    sudokuCells[i].SetHSubs(hSubRules.hsubGrid[i], true);
+                // Else clear hidden subset text
+                else
+                    sudokuCells[i].SetHSubs(null, false);
+            }
+        }
+        // Else if off, clear all hidden subset text
+        else
+            for (int i = 0; i < 81; i++)
+                sudokuCells[i].SetHSubs(null, false);
     }
 }

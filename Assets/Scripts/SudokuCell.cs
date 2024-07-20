@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using System.Net;
+using System;
 
 public class SudokuCell : MonoBehaviour
 {
@@ -11,8 +12,8 @@ public class SudokuCell : MonoBehaviour
     public Vector3 position;
     private TextMeshProUGUI mainText;
     private TextMeshProUGUI upperText;
-    private TextMeshProUGUI middleText;
     private TextMeshProUGUI lowerText;
+    private TextMeshProUGUI middleText;
 
     private Color mainColor = Color.black;
     private Color noteColor;
@@ -78,17 +79,29 @@ public class SudokuCell : MonoBehaviour
         }
     }
 
-    // Toggle isShowingNotes bool and returns value
+    // Toggle isShowingNotes bool
     public static void ToggleSeeNotes()
     {
         isShowingNotes = !isShowingNotes;
+    }
+
+    // Set isShowingHsubs bool
+    public void SetHSubs(List<int> hsubNotes, bool isShowing)
+    {
+        string middleString = "";
+
+        if (isShowing)
+            foreach (int hsub in hsubNotes)
+                middleString += hsub.ToString();
+
+        // Set the text property
+        middleText.text = middleString;
     }
 
     // Set the cell's note and hidden subset text
     public void SetNoteText(bool[] notes)
     {
         string upperString = "";
-        string middleString = "";
         string lowerString = "";
 
         if (isShowingNotes)
@@ -108,7 +121,6 @@ public class SudokuCell : MonoBehaviour
 
         // Set the text properties
         upperText.text = upperString;
-        middleText.text = middleString;
         lowerText.text = lowerString;
     }
 
