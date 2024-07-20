@@ -7,11 +7,18 @@ using UnityEngine;
 
 public class HSubRules
 {
-    public List<int>[] hsubGrid = new List<int>[81]; // Used for computation
+    public List<int>[] hsubGrid = new List<int>[81];
+
+    // Found hidden subsets
     private List<(int index, int value)> singles;
     private List<(int index1, int index2, int value1, int value2)> doubles;
     private List<(int index1, int index2, int index3, int value1, int value2, int value3)> triples;
     private List<(int index1, int index2, int index3, int index4, int value1, int value2, int value3, int value4)> quadruples;
+
+    // Occurrence dictionaries. Used for identifying doubles, triples, and quadruples with members less than the expected occurence amount
+    private Dictionary<(int occurrence1, int occurrence2), int> twoOccurrenceDict;
+    private Dictionary<(int? occurrence1, int? occurrence2, int? occurrence3), List<int>> threeOccurrenceDict;
+    private Dictionary<(int? occurrence1, int? occurrence2, int? occurrence3, int? occurrence4), List<int>> fourOccurrenceDict;
 
     // Constructor to initialize with the current 1D notes grid state
     public HSubRules(bool[][] currentNotes)
@@ -334,21 +341,23 @@ public class HSubRules
         }
 
         // Find values with matching indices
-        var indexDictionary = new Dictionary<(int occurrence1, int occurrence2), int>();
+        twoOccurrenceDict = new Dictionary<(int occurrence1, int occurrence2), int>();
         foreach (var tuple in twoOccurrences)
         {
             var indices = (tuple.occurrence1, tuple.occurrence2);
-            if (indexDictionary.ContainsKey(indices))
+            if (twoOccurrenceDict.ContainsKey(indices))
             {
                 // Duplicate found, add a tuple with both elements and the indices to the list
                 if (isInverted)
-                    doubles.Add((indexDictionary[indices], tuple.value, tuple.occurrence1, tuple.occurrence2));
+                    doubles.Add((twoOccurrenceDict[indices], tuple.value, tuple.occurrence1, tuple.occurrence2));
                 else
-                    doubles.Add((tuple.occurrence1, tuple.occurrence2, indexDictionary[indices], tuple.value));
+                    doubles.Add((tuple.occurrence1, tuple.occurrence2, twoOccurrenceDict[indices], tuple.value));
             }
             else
+            {
                 // Add the indices and value to the dictionary
-                indexDictionary[indices] = tuple.value;
+                twoOccurrenceDict[indices] = tuple.value;
+            }
         }
 
         return doubles;
@@ -375,17 +384,17 @@ public class HSubRules
         }
 
         // Find values with matching indices
-        var indexDictionary = new Dictionary<(int occurrence1, int occurrence2, int occurrence3), List<int>>();
+        threeOccurrenceDict = new Dictionary<(int? occurrence1, int? occurrence2, int? occurrence3), List<int>>(new TripleTupleComparer());
         foreach (var tuple in threeOccurrences)
         {
             var indices = (tuple.occurrence1, tuple.occurrence2, tuple.occurrence3);
-            if (indexDictionary.ContainsKey(indices))
+            if (threeOccurrenceDict.ContainsKey(indices))
             {
-                indexDictionary[indices].Add(tuple.value);
-                if (indexDictionary[indices].Count == 3)
+                threeOccurrenceDict[indices].Add(tuple.value);
+                if (threeOccurrenceDict[indices].Count == 3)
                 {
                     // Triple found, add a tuple with all three elements and the indices to the list
-                    var values = indexDictionary[indices];
+                    var values = threeOccurrenceDict[indices];
                     if (isInverted)
                         triples.Add((values[0], values[1], values[2], indices.occurrence1, indices.occurrence2, indices.occurrence3));
                     else
@@ -395,7 +404,7 @@ public class HSubRules
             else
             {
                 // Add the indices and value to the dictionary
-                indexDictionary[indices] = new List<int> { tuple.value };
+                threeOccurrenceDict[indices] = new List<int> { tuple.value };
             }
         }
 
@@ -424,17 +433,17 @@ public class HSubRules
         }
 
         // Find values with matching indices
-        var indexDictionary = new Dictionary<(int occurrence1, int occurrence2, int occurrence3, int occurrence4), List<int>>();
+        fourOccurrenceDict = new Dictionary<(int? occurrence1, int? occurrence2, int? occurrence3, int? occurrence4), List<int>>(new QuadrupleTupleComparer());
         foreach (var tuple in fourOccurrences)
         {
             var indices = (tuple.occurrence1, tuple.occurrence2, tuple.occurrence3, tuple.occurrence4);
-            if (indexDictionary.ContainsKey(indices))
+            if (fourOccurrenceDict.ContainsKey(indices))
             {
-                indexDictionary[indices].Add(tuple.value);
-                if (indexDictionary[indices].Count == 4)
+                fourOccurrenceDict[indices].Add(tuple.value);
+                if (fourOccurrenceDict[indices].Count == 4)
                 {
                     // Quadruple found, add a tuple with all four elements and the indices to the list
-                    var values = indexDictionary[indices];
+                    var values = fourOccurrenceDict[indices];
                     if (isInverted)
                         quadruples.Add((values[0], values[1], values[2], values[3], indices.occurrence1, indices.occurrence2, indices.occurrence3, indices.occurrence4));
                     else
@@ -444,7 +453,7 @@ public class HSubRules
             else
             {
                 // Add the indices and value to the dictionary
-                indexDictionary[indices] = new List<int> { tuple.value };
+                fourOccurrenceDict[indices] = new List<int> { tuple.value };
             }
         }
 
