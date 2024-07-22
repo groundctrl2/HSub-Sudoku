@@ -9,21 +9,10 @@ public class HSubRules
 {
     public List<int>[] hsubGrid = new List<int>[81];
 
-    // Found hidden subsets
-    private List<(int index, int value)> singles;
-    private List<(int index1, int index2, int value1, int value2)> doubles;
-    private List<(int index1, int index2, int index3, int value1, int value2, int value3)> triples;
-    private List<(int index1, int index2, int index3, int index4, int value1, int value2, int value3, int value4)> quadruples;
-
-    // Occurrence dictionaries. Used for identifying doubles, triples, and quadruples with members less than the expected occurence amount
-    private Dictionary<(int occurrence1, int occurrence2), int> twoOccurrenceDict;
-    private Dictionary<(int? occurrence1, int? occurrence2, int? occurrence3), List<int>> threeOccurrenceDict;
-    private Dictionary<(int? occurrence1, int? occurrence2, int? occurrence3, int? occurrence4), List<int>> fourOccurrenceDict;
-
     // Constructor to initialize with the current 1D notes grid state
     public HSubRules(bool[][] currentNotes)
     {
-        // Initialize both hsub grids (both made of Lists)
+        // Initialize hsub grid
         for (int i = 0; i < currentNotes.Length; i++)
         {
             hsubGrid[i] = new List<int>();
@@ -31,219 +20,93 @@ public class HSubRules
                 if (currentNotes[i][j]) hsubGrid[i].Add(j + 1);
         }
 
-        // Find HSubs
-        var allSinglesFound = new List<(int index, int value)>();
-        var allDoublesFound = new List<(int index1, int index2, int value1, int value2)>();
-        var allTriplesFound = new List<(int index1, int index2, int index3, int value1, int value2, int value3)>();
-        var allQuadruplesFound = new List<(int index1, int index2, int index3, int index4, int value1, int value2, int value3, int value4)>();
+        // TESTING
+        var testNG = GetNoteGroup(SudokuRules.GetRow(5));
+        var testING = InvertNoteGroup(testNG);
+        var clusters = GetIndexClusters(testNG);
+        var invertedClusters = GetIndexClusters(testING);
 
-        // Search each row
-        for (int row = 0; row < 9; row++)
+        // print normal clusters
+        string c = "clusters: \n";
+        for (int i = 0; i < clusters.Count; i++)
         {
-            int[] rowIndices = SudokuRules.GetRow(row);
-            var noteGroup = GetNoteGroup(rowIndices);
-            var invertedNoteGroup = InvertNoteGroup(noteGroup);
-            int[] occurrences = CountDigitOccurrences(noteGroup);
-            int[] invertedOccurrences = CountDigitOccurrences(invertedNoteGroup);
-
-            // Get generic index singles (normal & inverted)
-            var genericIndexSingles = GetSingleHSubs(noteGroup, occurrences, false);
-            var genericIndexInvertedSingles = GetSingleHSubs(invertedNoteGroup, invertedOccurrences, true);
-
-            // Convert indices back to original index and add to 'all list'
-            foreach ((int index, int value) tuple in genericIndexSingles)
-                allSinglesFound.Add((rowIndices[tuple.index - 1], tuple.value));
-            foreach ((int index, int value) tuple in genericIndexInvertedSingles)
-                allSinglesFound.Add((rowIndices[tuple.index - 1], tuple.value));
-
-            GetHSubs(rowIndices, noteGroup, invertedNoteGroup, occurrences, invertedOccurrences, ref allDoublesFound, ref allTriplesFound, ref allQuadruplesFound);
+            string s = i.ToString() + ": index ";
+            foreach (int index in clusters[i])
+                s += index.ToString();
+            c += s += ", ";
         }
+        Debug.Log(c);
 
-        // Search each column
-        for (int col = 0; col < 9; col++)
+        // print inverted clusters
+        string ic = "inverted clusters: \n";
+        for (int i = 0; i < clusters.Count; i++)
         {
-            int[] colIndices = SudokuRules.GetCol(col);
-            var noteGroup = GetNoteGroup(colIndices);
-            var invertedNoteGroup = InvertNoteGroup(noteGroup);
-            int[] occurrences = CountDigitOccurrences(noteGroup);
-            int[] invertedOccurrences = CountDigitOccurrences(invertedNoteGroup);
-
-            GetHSubs(colIndices, noteGroup, invertedNoteGroup, occurrences, invertedOccurrences, ref allDoublesFound, ref allTriplesFound, ref allQuadruplesFound);
+            string s = (i + 1).ToString() + ": value ";
+            foreach (int index in invertedClusters[i])
+                s += index.ToString();
+            ic += s += ", ";
         }
-
-        // Search each subgrid
-        for (int subgrid = 1; subgrid < 10; subgrid++)
-        {
-            int[] subgridIndices = SudokuRules.GetSubGrid(subgrid);
-            var noteGroup = GetNoteGroup(subgridIndices);
-            var invertedNoteGroup = InvertNoteGroup(noteGroup);
-            int[] occurrences = CountDigitOccurrences(noteGroup);
-            int[] invertedOccurrences = CountDigitOccurrences(invertedNoteGroup);
-
-            GetHSubs(subgridIndices, noteGroup, invertedNoteGroup, occurrences, invertedOccurrences, ref allDoublesFound, ref allTriplesFound, ref allQuadruplesFound);
-        }
-
-        // Store all unique hidden subsets found
-        singles = allSinglesFound.Distinct().ToList();
-        doubles = allDoublesFound.Distinct().ToList();
-        triples = allTriplesFound.Distinct().ToList();
-        quadruples = allQuadruplesFound.Distinct().ToList();
-        UpdateHSubGrid();
+        Debug.Log(ic);
     }
 
-    // Update the hsub grid with the found hidden subsets
-    public void UpdateHSubGrid()
+    // Returns 2D List of index clusters, index values remain generic. Each index appearing once, otherwise the clusters would join
+    private List<List<int>> GetIndexClusters(List<int>[] noteGroup)
     {
-        bool[] smallestHSubAdded = new bool[81];
+        var clusters = new List<List<int>>();
+        var clusterValues = new List<HashSet<int>>();
 
-        // Clear the Hidden Subset Grid (computation already complete, ready for display)
-        foreach (var list in hsubGrid)
-            list.Clear();
-
-        // Add singles
-        foreach ((int index, int value) tuple in singles)
+        // For each position in the note group, add to existing cluster or create a new one
+        for (int position = 1; position <= 9; position++)
         {
-            if (!smallestHSubAdded[tuple.index])
-            {
-                hsubGrid[tuple.index].Add(tuple.value);
+            int positionIndex = position - 1;
+            var clustersToJoin = new HashSet<int>();
 
-                smallestHSubAdded[tuple.index] = true;
+            // Get clusters to join
+            foreach (int value in noteGroup[positionIndex])
+                for (int i = 0; i < clusterValues.Count; i++)
+                    if (clusterValues[i].Contains(value))
+                        clustersToJoin.Add(i);
+
+            // Join old clusters and their values into new cluster
+            var newClusters = new List<List<int>>();
+            var newClusterValues = new List<HashSet<int>>();
+            var newCluster = new List<int>();
+            var newValues = new HashSet<int>();
+            for (int i = 0; i < clusters.Count; i++)
+            {
+                // Join old clusters into new cluster
+                if (clustersToJoin.Contains(i))
+                {
+                    newCluster.AddRange(clusters[i]);
+                    foreach (int value in clusterValues[i])
+                        newValues.Add(value);
+                }
+                // Add original clusters that are not being joined
+                else
+                {
+                    newClusters.Add(clusters[i]);
+                    newClusterValues.Add(clusterValues[i]);
+                }
             }
+
+            // Add current position and its values to new cluster
+            newCluster.Add(position);
+            foreach (int value in noteGroup[positionIndex])
+                newValues.Add(value);
+
+            // Add the new cluster and its values
+            newClusters.Add(newCluster);
+            newClusterValues.Add(newValues);
+
+            // Update the original lists with the new ones
+            clusters = newClusters;
+            clusterValues = newClusterValues;
         }
 
-        // Add doubles
-        foreach ((int index1, int index2, int value1, int value2) tuple in doubles)
-        {
-            if (!smallestHSubAdded[tuple.index1])
-            {
-                hsubGrid[tuple.index1].Add(tuple.value1);
-                hsubGrid[tuple.index1].Add(tuple.value2);
-
-                smallestHSubAdded[tuple.index1] = true;
-            }
-            if (!smallestHSubAdded[tuple.index2])
-            {
-                hsubGrid[tuple.index2].Add(tuple.value1);
-                hsubGrid[tuple.index2].Add(tuple.value2);
-
-                smallestHSubAdded[tuple.index2] = true;
-            }
-        }
-
-        // Add triples
-        foreach ((int index1, int index2, int index3, int value1, int value2, int value3) tuple in triples)
-        {
-            if (!smallestHSubAdded[tuple.index1])
-            {
-                hsubGrid[tuple.index1].Add(tuple.value1);
-                hsubGrid[tuple.index1].Add(tuple.value2);
-                hsubGrid[tuple.index1].Add(tuple.value3);
-
-                smallestHSubAdded[tuple.index1] = true;
-            }
-            if (!smallestHSubAdded[tuple.index2])
-            {
-                hsubGrid[tuple.index2].Add(tuple.value1);
-                hsubGrid[tuple.index2].Add(tuple.value2);
-                hsubGrid[tuple.index2].Add(tuple.value3);
-
-                smallestHSubAdded[tuple.index2] = true;
-            }
-            if (!smallestHSubAdded[tuple.index3])
-            {
-                hsubGrid[tuple.index3].Add(tuple.value1);
-                hsubGrid[tuple.index3].Add(tuple.value2);
-                hsubGrid[tuple.index3].Add(tuple.value3);
-
-                smallestHSubAdded[tuple.index3] = true;
-            }
-        }
-
-        // Add quadruples
-        foreach ((int index1, int index2, int index3, int index4, int value1, int value2, int value3, int value4) tuple in quadruples)
-        {
-            if (!smallestHSubAdded[tuple.index1])
-            {
-                hsubGrid[tuple.index1].Add(tuple.value1);
-                hsubGrid[tuple.index1].Add(tuple.value2);
-                hsubGrid[tuple.index1].Add(tuple.value3);
-                hsubGrid[tuple.index1].Add(tuple.value4);
-
-                smallestHSubAdded[tuple.index1] = true;
-            }
-            if (!smallestHSubAdded[tuple.index2])
-            {
-                hsubGrid[tuple.index2].Add(tuple.value1);
-                hsubGrid[tuple.index2].Add(tuple.value2);
-                hsubGrid[tuple.index2].Add(tuple.value3);
-                hsubGrid[tuple.index2].Add(tuple.value4);
-
-                smallestHSubAdded[tuple.index2] = true;
-            }
-            if (!smallestHSubAdded[tuple.index3])
-            {
-                hsubGrid[tuple.index3].Add(tuple.value1);
-                hsubGrid[tuple.index3].Add(tuple.value2);
-                hsubGrid[tuple.index3].Add(tuple.value3);
-                hsubGrid[tuple.index3].Add(tuple.value4);
-
-                smallestHSubAdded[tuple.index3] = true;
-            }
-            if (!smallestHSubAdded[tuple.index4])
-            {
-                hsubGrid[tuple.index4].Add(tuple.value1);
-                hsubGrid[tuple.index4].Add(tuple.value2);
-                hsubGrid[tuple.index4].Add(tuple.value3);
-                hsubGrid[tuple.index4].Add(tuple.value4);
-
-                smallestHSubAdded[tuple.index4] = true;
-            }
-        }
+        return clusters;
     }
 
-    // Helper method, Finds the Hidden Subsets for Doubles, Triples, and Quadruples (Singles only need to iterated through one group to find)
-    private void GetHSubs(
-    int[] indices,
-    List<int>[] noteGroup,
-    List<int>[] invertedNoteGroup,
-    int[] occurrences,
-    int[] invertedOccurrences,
-    ref List<(int index1, int index2, int value1, int value2)> allDoublesFound,
-    ref List<(int index1, int index2, int index3, int value1, int value2, int value3)> allTriplesFound,
-    ref List<(int index1, int index2, int index3, int index4, int value1, int value2, int value3, int value4)> allQuadruplesFound)
-    {
-        // Get generic index doubles (normal & inverted)
-        var genericIndexDoubles = GetDoubleHSubs(noteGroup, occurrences, false);
-        var genericIndexInvertedDoubles = GetDoubleHSubs(invertedNoteGroup, invertedOccurrences, true);
-
-        // Convert doubles indices back to original index and add to 'all list'
-        foreach ((int index1, int index2, int value1, int value2) tuple in genericIndexDoubles)
-            allDoublesFound.Add((indices[tuple.index1 - 1], indices[tuple.index2 - 1], tuple.value1, tuple.value2));
-        foreach ((int index1, int index2, int value1, int value2) tuple in genericIndexInvertedDoubles)
-            allDoublesFound.Add((indices[tuple.index1 - 1], indices[tuple.index2 - 1], tuple.value1, tuple.value2));
-
-        // Get generic index triples (normal & inverted)
-        var genericIndexTriples = GetTripleHSubs(noteGroup, occurrences, false);
-        var genericIndexInvertedTriples = GetTripleHSubs(invertedNoteGroup, invertedOccurrences, true);
-
-        // Convert triples indices back to original index and add to 'all list'
-        foreach ((int index1, int index2, int index3, int value1, int value2, int value3) tuple in genericIndexTriples)
-            allTriplesFound.Add((indices[tuple.index1 - 1], indices[tuple.index2 - 1], indices[tuple.index3 - 1], tuple.value1, tuple.value2, tuple.value3));
-        foreach ((int index1, int index2, int index3, int value1, int value2, int value3) tuple in genericIndexInvertedTriples)
-            allTriplesFound.Add((indices[tuple.index1 - 1], indices[tuple.index2 - 1], indices[tuple.index3 - 1], tuple.value1, tuple.value2, tuple.value3));
-
-        // Get generic index quadruples (normal & inverted)
-        var genericIndexQuadruples = GetQuadrupleHSubs(noteGroup, occurrences, false);
-        var genericIndexInvertedQuadruples = GetQuadrupleHSubs(invertedNoteGroup, invertedOccurrences, true);
-
-        // Convert quadruples indices back to original index and add to 'all list'
-        foreach ((int index1, int index2, int index3, int index4, int value1, int value2, int value3, int value4) tuple in genericIndexQuadruples)
-            allQuadruplesFound.Add((indices[tuple.index1 - 1], indices[tuple.index2 - 1], indices[tuple.index3 - 1], indices[tuple.index4 - 1], tuple.value1, tuple.value2, tuple.value3, tuple.value4));
-        foreach ((int index1, int index2, int index3, int index4, int value1, int value2, int value3, int value4) tuple in genericIndexInvertedQuadruples)
-            allQuadruplesFound.Add((indices[tuple.index1 - 1], indices[tuple.index2 - 1], indices[tuple.index3 - 1], indices[tuple.index4 - 1], tuple.value1, tuple.value2, tuple.value3, tuple.value4));
-    }
-
-    // Helper method. Given an array of indices, pulls the corresponding cell lists from the Hidden Subset Grid into its own list
+    // Given an array of indices, pulls the corresponding cell lists from the Hidden Subset Grid into its own list
     private List<int>[] GetNoteGroup(int[] indices)
     {
         var noteGroup = new List<int>[indices.Length];
@@ -279,7 +142,7 @@ public class HSubRules
         return valueOccurrences;
     }
 
-    // Helper method. Get the index/indices of a given value in a given note group (row/col/subgrid) based on the amount of occurrences to find
+    // Get the index/indices of a given value in a given note group (row/col/subgrid) based on the amount of occurrences to find
     private int[] FindOccurrenceIndices(List<int>[] noteGroup, int value, int occurrenceCount)
     {
         int[] occurrenceIndices = new int[occurrenceCount];
@@ -297,166 +160,5 @@ public class HSubRules
         }
 
         return occurrenceIndices;
-    }
-
-    // Returns list of tuples representing the single cell hidden subsets found
-    private List<(int index, int value)> GetSingleHSubs(List<int>[] noteGroup, int[] occurrences, bool isInverted)
-    {
-        var singles = new List<(int index, int value)>();
-
-        for (int i = 0; i < 9; i++)
-        {
-            if (occurrences[i] == 1)
-            {
-                int value = i + 1; // + 1 to reflect position instead of index
-                int occurrence = FindOccurrenceIndices(noteGroup, value, 1)[0] + 1; // + 1 to reflect position instead of index
-
-                if (isInverted)
-                    singles.Add((value, occurrence));
-                else
-                    singles.Add((occurrence, value));
-            }
-        }
-
-        return singles;
-    }
-
-    // Returns list of tuples representing the double cell hidden subsets found
-    private List<(int index1, int index2, int value1, int value2)> GetDoubleHSubs(List<int>[] noteGroup, int[] occurrences, bool isInverted)
-    {
-        var doubles = new List<(int index1, int index2, int value1, int value2)>();
-        var twoOccurrences = new List<(int value, int occurrence1, int occurrence2)>();
-
-        // Get elements that occur twice and store their list indices
-        for (int i = 0; i < 9; i++)
-        {
-            if (occurrences[i] == 2)
-            {
-                int value = i + 1; // + 1 to reflect position instead of index
-                var valueOccurrences = FindOccurrenceIndices(noteGroup, value, 2);
-                int occurrence1 = valueOccurrences[0] + 1; // + 1 to reflect position instead of index
-                int occurrence2 = valueOccurrences[1] + 1;
-                twoOccurrences.Add((value, occurrence1, occurrence2));
-            }
-        }
-
-        // Find values with matching indices
-        twoOccurrenceDict = new Dictionary<(int occurrence1, int occurrence2), int>();
-        foreach (var tuple in twoOccurrences)
-        {
-            var indices = (tuple.occurrence1, tuple.occurrence2);
-            if (twoOccurrenceDict.ContainsKey(indices))
-            {
-                // Duplicate found, add a tuple with both elements and the indices to the list
-                if (isInverted)
-                    doubles.Add((twoOccurrenceDict[indices], tuple.value, tuple.occurrence1, tuple.occurrence2));
-                else
-                    doubles.Add((tuple.occurrence1, tuple.occurrence2, twoOccurrenceDict[indices], tuple.value));
-            }
-            else
-            {
-                // Add the indices and value to the dictionary
-                twoOccurrenceDict[indices] = tuple.value;
-            }
-        }
-
-        return doubles;
-    }
-
-    // Returns list of tuples representing the triple cell hidden subsets found
-    private List<(int index1, int index2, int index3, int value1, int value2, int value3)> GetTripleHSubs(List<int>[] noteGroup, int[] occurrences, bool isInverted)
-    {
-        var triples = new List<(int index1, int index2, int index3, int value1, int value2, int value3)>();
-        var threeOccurrences = new List<(int value, int occurrence1, int occurrence2, int occurrence3)>();
-
-        // Get elements that occur three times and store their list indices
-        for (int i = 0; i < 9; i++)
-        {
-            if (occurrences[i] == 3)
-            {
-                int value = i + 1; // + 1 to reflect position instead of index
-                var valueOccurrences = FindOccurrenceIndices(noteGroup, value, 3);
-                int occurrence1 = valueOccurrences[0] + 1; // + 1 to reflect position instead of index
-                int occurrence2 = valueOccurrences[1] + 1;
-                int occurrence3 = valueOccurrences[2] + 1;
-                threeOccurrences.Add((value, occurrence1, occurrence2, occurrence3));
-            }
-        }
-
-        // Find values with matching indices
-        threeOccurrenceDict = new Dictionary<(int? occurrence1, int? occurrence2, int? occurrence3), List<int>>(new TripleTupleComparer());
-        foreach (var tuple in threeOccurrences)
-        {
-            var indices = (tuple.occurrence1, tuple.occurrence2, tuple.occurrence3);
-            if (threeOccurrenceDict.ContainsKey(indices))
-            {
-                threeOccurrenceDict[indices].Add(tuple.value);
-                if (threeOccurrenceDict[indices].Count == 3)
-                {
-                    // Triple found, add a tuple with all three elements and the indices to the list
-                    var values = threeOccurrenceDict[indices];
-                    if (isInverted)
-                        triples.Add((values[0], values[1], values[2], indices.occurrence1, indices.occurrence2, indices.occurrence3));
-                    else
-                        triples.Add((indices.occurrence1, indices.occurrence2, indices.occurrence3, values[0], values[1], values[2]));
-                }
-            }
-            else
-            {
-                // Add the indices and value to the dictionary
-                threeOccurrenceDict[indices] = new List<int> { tuple.value };
-            }
-        }
-
-        return triples;
-    }
-
-    // Returns list of tuples representing the quadruple cell hidden subsets found
-    private List<(int index1, int index2, int index3, int index4, int value1, int value2, int value3, int value4)> GetQuadrupleHSubs(List<int>[] noteGroup, int[] occurrences, bool isInverted)
-    {
-        var quadruples = new List<(int index1, int index2, int index3, int index4, int value1, int value2, int value3, int value4)>();
-        var fourOccurrences = new List<(int value, int occurrence1, int occurrence2, int occurrence3, int occurrence4)>();
-
-        // Get elements that occur four times and store their list indices
-        for (int i = 0; i < 9; i++)
-        {
-            if (occurrences[i] == 4)
-            {
-                int value = i + 1; // + 1 to reflect position instead of index
-                var valueOccurrences = FindOccurrenceIndices(noteGroup, value, 4);
-                int occurrence1 = valueOccurrences[0] + 1; // + 1 to reflect position instead of index
-                int occurrence2 = valueOccurrences[1] + 1;
-                int occurrence3 = valueOccurrences[2] + 1;
-                int occurrence4 = valueOccurrences[3] + 1;
-                fourOccurrences.Add((value, occurrence1, occurrence2, occurrence3, occurrence4));
-            }
-        }
-
-        // Find values with matching indices
-        fourOccurrenceDict = new Dictionary<(int? occurrence1, int? occurrence2, int? occurrence3, int? occurrence4), List<int>>(new QuadrupleTupleComparer());
-        foreach (var tuple in fourOccurrences)
-        {
-            var indices = (tuple.occurrence1, tuple.occurrence2, tuple.occurrence3, tuple.occurrence4);
-            if (fourOccurrenceDict.ContainsKey(indices))
-            {
-                fourOccurrenceDict[indices].Add(tuple.value);
-                if (fourOccurrenceDict[indices].Count == 4)
-                {
-                    // Quadruple found, add a tuple with all four elements and the indices to the list
-                    var values = fourOccurrenceDict[indices];
-                    if (isInverted)
-                        quadruples.Add((values[0], values[1], values[2], values[3], indices.occurrence1, indices.occurrence2, indices.occurrence3, indices.occurrence4));
-                    else
-                        quadruples.Add((indices.occurrence1, indices.occurrence2, indices.occurrence3, indices.occurrence4, values[0], values[1], values[2], values[3]));
-                }
-            }
-            else
-            {
-                // Add the indices and value to the dictionary
-                fourOccurrenceDict[indices] = new List<int> { tuple.value };
-            }
-        }
-
-        return quadruples;
     }
 }
