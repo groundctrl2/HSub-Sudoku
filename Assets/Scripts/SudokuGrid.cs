@@ -255,21 +255,25 @@ public class SudokuGrid : MonoBehaviour
         // If on, calculate hidden subsets and set text
         if (SetOrClear && isShowingHSubs)
         {
-            hSubRules = new HSubRules(sudokuRules.notesGrid);
-
-            for (int i = 0; i < 81; i++)
-            {
-                // If no digit in cell, set hsub text
-                if (cellDigits[i] == 0)
-                    sudokuCells[i].SetHSubs(hSubRules.hsubGrid[i], true);
-                // Else clear hidden subset text
-                else
-                    sudokuCells[i].SetHSubs(null, false);
-            }
+            hSubRules = new HSubRules(this, sudokuRules.notesGrid);
+            ResetHSubs(hSubRules);
         }
         // Else if off, clear all hidden subset text
         else
             for (int i = 0; i < 81; i++)
                 sudokuCells[i].SetHSubs(null, false);
+    }
+
+    public void ResetHSubs(HSubRules currentHSubRules)
+    {
+        for (int i = 0; i < 81; i++)
+        {
+            // If no digit in cell, set if less than 4 in hsub cell
+            if (cellDigits[i] == 0 && currentHSubRules.hsubGrid[i].Count <= 4)
+                sudokuCells[i].SetHSubs(currentHSubRules.hsubGrid[i], true);
+            // Else clear hidden subset text
+            else
+                sudokuCells[i].SetHSubs(null, false);
+        }
     }
 }
