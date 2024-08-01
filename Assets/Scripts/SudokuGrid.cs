@@ -16,6 +16,7 @@ public class SudokuGrid : MonoBehaviour
     public GameObject noteTextPrefab;
     public Material[] materials = new Material[3];
     public Color noteColor;
+    public Color hsubColor;
     public Color incorrectColor;
 
     private Vector3 gridCenter;
@@ -99,8 +100,7 @@ public class SudokuGrid : MonoBehaviour
             GameObject upperText = Instantiate(noteTextPrefab, cell.transform);
             upperText.transform.SetParent(cell.transform, false); // Ensure cell text is parented to the cell
             RectTransform upperRectTransform = upperText.GetComponent<RectTransform>();
-            upperRectTransform.pivot = new Vector2(0.5f, 1f); // Anchor to top
-            upperRectTransform.anchoredPosition = new Vector2(0, cellSize / 12); // Position at the top
+            upperRectTransform.anchoredPosition = new Vector2(0, cellSize / 9); // Position at the top
             upperRectTransform.sizeDelta = noteSize; // Set the width to match the cell width
 
             // Add the middle note text GameObject
@@ -109,12 +109,15 @@ public class SudokuGrid : MonoBehaviour
             RectTransform middleRectTransform = middleText.GetComponent<RectTransform>();
             middleRectTransform.anchoredPosition = Vector2.zero;
             middleRectTransform.sizeDelta = noteSize; // Set the width to match the cell width
+            TextMeshProUGUI middleTextComponent = middleText.GetComponent<TextMeshProUGUI>();
+            middleTextComponent.fontStyle = FontStyles.Bold; // Set to bold
+            middleTextComponent.fontSize = middleTextComponent.fontSize + (middleTextComponent.fontSize / 5); // Set font size
 
             // Add the lower note text GameObject
             GameObject lowerText = Instantiate(noteTextPrefab, cell.transform);
             lowerText.transform.SetParent(cell.transform, false); // Ensure cell text is parented to the cell
             RectTransform lowerRectTransform = lowerText.GetComponent<RectTransform>();
-            lowerRectTransform.anchoredPosition = new Vector2(0, -cellSize / 16); // Position at the bottom
+            lowerRectTransform.anchoredPosition = new Vector2(0, -cellSize / 9); // Position at the bottom
             lowerRectTransform.sizeDelta = noteSize; // Set the width to match the cell width
 
             // Create SudokuCell

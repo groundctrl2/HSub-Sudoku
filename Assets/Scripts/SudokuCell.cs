@@ -17,6 +17,7 @@ public class SudokuCell : MonoBehaviour
 
     private Color mainColor = Color.black;
     private Color noteColor;
+    private Color hsubColor;
     private Color incorrectColor;
 
     private static bool isMultiSelecting = false;
@@ -50,12 +51,15 @@ public class SudokuCell : MonoBehaviour
         noteColor = grid.noteColor;
         if (noteColor.a == 0)
             noteColor.a = 1; // Set alpha to 1 if necessary (fully opaque)
+        hsubColor = grid.hsubColor;
+        if (hsubColor.a == 0)
+            hsubColor.a = 1; // Set alpha to 1 if necessary (fully opaque)
         incorrectColor = grid.incorrectColor;
         if (incorrectColor.a == 0)
             incorrectColor.a = 1; // Set alpha to 1 if necessary (fully opaque)
 
         SetColor(upperText, noteColor);
-        SetColor(middleText, mainColor);
+        SetColor(middleText, hsubColor);
         SetColor(lowerText, noteColor);
     }
 
