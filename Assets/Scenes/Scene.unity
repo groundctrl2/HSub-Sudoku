@@ -3001,6 +3001,7 @@ MonoBehaviour:
   - {fileID: 2100000, guid: 59a2192d994e4314586c5450e9764512, type: 2}
   - {fileID: 2100000, guid: 0e7a0cbed86b1f64a8dfe712a4cbbb58, type: 2}
   - {fileID: 2100000, guid: 6905cc6ffe1dc5a479786cb17697e2cb, type: 2}
+  - {fileID: 2100000, guid: a3e36c2920c88994c918814e9dc04681, type: 2}
   noteColor: {r: 0.42745098, g: 0.6509804, b: 1, a: 0}
   incorrectColor: {r: 0.735849, g: 0, b: 0, a: 0}
 --- !u!1 &1773688335
@@ -3761,7 +3762,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 215.43651, y: 1.1805725}
+  m_AnchoredPosition: {x: 215.43652, y: 1.180542}
   m_SizeDelta: {x: -437.87695, y: -8.706238}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1977797002

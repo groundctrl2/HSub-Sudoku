@@ -10,14 +10,16 @@ public class SudokuCell : MonoBehaviour
     public SudokuGrid grid;
     public int index;
     public Vector3 position;
-    private TextMeshProUGUI mainText;
+    public MainTextState state;
+    public string incorrectText = "";
+
     private TextMeshProUGUI upperText;
     private TextMeshProUGUI lowerText;
     private TextMeshProUGUI middleText;
+    private TextMeshProUGUI mainText;
 
     private Color mainColor = Color.black;
     private Color noteColor;
-    private Color hsubColor;
     private Color incorrectColor;
 
     private static bool isMultiSelecting = false;
@@ -25,11 +27,14 @@ public class SudokuCell : MonoBehaviour
     private static bool isSelecting = false;
     private static bool isDeselecting = false;
     private static bool isMouseDragging = false;
+    public bool hasHsubValues = false;
     private bool isSelected = false;
+    private bool hasHsubError = false;
 
     Material normal;
     Material hovered;
     Material selected;
+    Material hsubError;
 
     public void Initialize(SudokuGrid newGrid, int newIndex, Vector3 newPosition, TextMeshProUGUI mainTextComponent, TextMeshProUGUI upperTextComponent, TextMeshProUGUI middleTextComponent, TextMeshProUGUI lowerTextComponent)
     {
@@ -46,33 +51,54 @@ public class SudokuCell : MonoBehaviour
         normal = grid.materials[0];
         hovered = grid.materials[1];
         selected = grid.materials[2];
+        hsubError = grid.materials[3];
 
         // Set colors
         noteColor = grid.noteColor;
         if (noteColor.a == 0)
             noteColor.a = 1; // Set alpha to 1 if necessary (fully opaque)
-        hsubColor = grid.hsubColor;
-        if (hsubColor.a == 0)
-            hsubColor.a = 1; // Set alpha to 1 if necessary (fully opaque)
         incorrectColor = grid.incorrectColor;
         if (incorrectColor.a == 0)
             incorrectColor.a = 1; // Set alpha to 1 if necessary (fully opaque)
 
         SetColor(upperText, noteColor);
-        SetColor(middleText, hsubColor);
+        SetColor(middleText, noteColor);
         SetColor(lowerText, noteColor);
     }
 
+    public enum MainTextState
+    {
+        empty, valid, incorrect, hsub
+    }
+
     // Set the cell's text
-    public void SetMainText(string text, bool isValid)
+    public void SetMainText(string text, bool isValid, bool isHsub)
     {
         mainText.text = text;
+        incorrectText = "";
 
-        // Set to incorrect color if conflicting digit
+        // Set to normal value
         if (isValid)
+        {
             SetColor(mainText, mainColor);
+            if (text == "")
+                state = MainTextState.empty;
+            else
+                state = MainTextState.valid;
+        }
+        // Set to hidden subset value
+        else if (isHsub)
+        {
+            SetColor(mainText, noteColor);
+            state = MainTextState.hsub;
+        }
+        // Set to incorrect value
         else
+        {
             SetColor(mainText, incorrectColor);
+            state = MainTextState.incorrect;
+            incorrectText = text;
+        }
 
         // Wipe out notes if adding a digit
         if (text != "")
@@ -94,9 +120,66 @@ public class SudokuCell : MonoBehaviour
     {
         string middleString = "";
 
-        if (isShowing)
-            foreach (int hsub in hsubNotes)
-                middleString += hsub.ToString();
+        // Process hsub notes if currently showing and notes provided (notes often not provided to reset cells that go from 1 hsub note to over 4)
+        if (hsubNotes != null)
+        {
+            if (isShowing)
+            {
+                if (state == MainTextState.empty || state == MainTextState.hsub)
+                {
+                    // Set text
+                    if (hsubNotes.Count == 1)
+                        SetMainText(hsubNotes[0].ToString(), false, true);
+                    else
+                    {
+                        if (state == MainTextState.hsub)
+                            SetMainText("", true, false);
+                        foreach (int hsub in hsubNotes)
+                            middleString += hsub.ToString();
+                    }
+
+                    // Set material to hsub error (and note text elements to hsub color) if no available digits in hsub grid
+                    if (hsubNotes.Count == 0 && hasHsubValues)
+                    {
+                        hasHsubError = true;
+                        SetMaterial(hsubError);
+                        SetColor(upperText, mainColor);
+                        SetColor(lowerText, mainColor);
+                        mainText.text = "";
+                    }
+                    // Set back to previous state if previously had hsubError that's fixed now
+                    else if (hasHsubError)
+                    {
+                        hasHsubError = false;
+                        SetMaterial(normal);
+                        SetColor(upperText, noteColor);
+                        SetColor(lowerText, noteColor);
+                        if (hsubNotes.Count == 1)
+                            SetMainText(hsubNotes[0].ToString(), false, true);
+                    }
+                }
+            }
+            else
+            {
+                // Reset cell's main text if not showing and hsub currently in main text
+                if (state == MainTextState.hsub)
+                    SetMainText("", true, false);
+                if (hasHsubError)
+                {
+                    SetMaterial(normal);
+                    hasHsubError = false;
+                }
+            }
+        }
+        else if (state == MainTextState.hsub)
+            SetMainText("", true, false);
+        else
+        {
+            hasHsubError = false;
+            SetMaterial(normal);
+            SetColor(upperText, noteColor);
+            SetColor(lowerText, noteColor);
+        }
 
         // Set the text property
         middleText.text = middleString;
@@ -108,7 +191,7 @@ public class SudokuCell : MonoBehaviour
         string upperString = "";
         string lowerString = "";
 
-        if (isShowingNotes)
+        if (isShowingNotes && state == MainTextState.empty)
         {
             List<int> noteDigits = new List<int>();
             for (int i = 0; i < 9; i++)
@@ -137,7 +220,7 @@ public class SudokuCell : MonoBehaviour
     }
 
     // Set the cell's material and bool value whether the cell is selected
-    public void SetMaterial(Material material)
+    private void SetMaterial(Material material)
     {
         GetComponent<Renderer>().material = material;
         isSelected = (material == selected) ? true : false;
@@ -155,7 +238,8 @@ public class SudokuCell : MonoBehaviour
     {
         isSelecting = false;
         isDeselecting = false;
-        SetMaterial(normal);
+        if (!hasHsubError)
+            SetMaterial(normal);
         grid.SetSelected(index, false);
     }
 
@@ -168,7 +252,7 @@ public class SudokuCell : MonoBehaviour
     // Select/Deselect cell and start dragging
     void OnMouseDown()
     {
-        if (!isMouseDragging)
+        if (!isMouseDragging && !hasHsubError)
         {
             // If multiselecting, can continue to select with multiple mouse downs
             if (isMultiSelecting)
@@ -211,24 +295,24 @@ public class SudokuCell : MonoBehaviour
     {
         if (isMouseDragging && isSelecting)
         {
-            SetMaterial(selected);
+            if (!hasHsubError)
+                SetMaterial(selected);
             grid.SetSelected(index, true);
         }
         else if (isMouseDragging && isDeselecting)
         {
-            SetMaterial(hovered);
+            if (!hasHsubError)
+                SetMaterial(hovered);
             grid.SetSelected(index, false);
         }
-        else if (!isSelecting && !isDeselecting && !isSelected)
-        {
+        else if (!isSelecting && !isDeselecting && !isSelected && !hasHsubError)
             SetMaterial(hovered);
-        }
     }
 
     // Set back to normal material if previously hovering
     void OnMouseExit()
     {
-        if (!isSelecting && !isSelected)
+        if (!isSelecting && !isSelected && !hasHsubError)
         {
             SetMaterial(normal);
         }

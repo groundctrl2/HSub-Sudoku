@@ -14,9 +14,8 @@ public class SudokuGrid : MonoBehaviour
     public GameObject cellPrefab;
     public GameObject mainTextPrefab;
     public GameObject noteTextPrefab;
-    public Material[] materials = new Material[3];
+    public Material[] materials = new Material[4];
     public Color noteColor;
-    public Color hsubColor;
     public Color incorrectColor;
 
     private Vector3 gridCenter;
@@ -28,8 +27,9 @@ public class SudokuGrid : MonoBehaviour
     private float cellSize; // Set in ResizeCellAndCenter()
 
     private SudokuRules sudokuRules;
+    private int[] incorrectDigits = new int[81];
+
     private HSubRules hSubRules;
-    private List<int>[] hSubs = new List<int>[81];
     private bool isShowingHSubs = false;
 
     // Start is called before the first frame update
@@ -126,7 +126,7 @@ public class SudokuGrid : MonoBehaviour
             sudokuCells[i] = sudokuCell; // Store SudokuCell
         }
 
-        UpdateNotes();
+        UpdateCells();
     }
 
     // Set whether a cell at given index is selected
@@ -146,7 +146,7 @@ public class SudokuGrid : MonoBehaviour
             if (cellsClicked[i])
             {
                 // If input same digit as current, clear cell
-                if (buttonNumber == cellDigits[i])
+                if (buttonNumber == cellDigits[i] || buttonNumber.ToString() == sudokuCells[i].incorrectText)
                     ClearCell(i);
                 else
                 {
@@ -154,13 +154,16 @@ public class SudokuGrid : MonoBehaviour
                     SudokuRules sudokuRules = new SudokuRules(cellDigits);
                     bool isValid = sudokuRules.IsValidMove(i, buttonNumber);
 
-                    sudokuCells[i].SetMainText($"{buttonNumber}", isValid);
-                    cellDigits[i] = buttonNumber;
+                    sudokuCells[i].SetMainText($"{buttonNumber}", isValid, false);
+                    if (isValid)
+                        cellDigits[i] = buttonNumber;
+                    else
+                        incorrectDigits[i] = buttonNumber;
                 }
             }
         }
 
-        UpdateNotes();
+        UpdateCells();
     }
 
     // Deselect all cells
@@ -177,22 +180,23 @@ public class SudokuGrid : MonoBehaviour
         {
             if (cellsClicked[i])
             {
-                sudokuCells[i].SetMainText("", true); // technically a valid add
+                sudokuCells[i].SetMainText("", true, false); // technically a valid add
                 cellDigits[i] = 0;
                 sudokuCells[i].Deselect();
                 cellsClicked[i] = false;
             }
         }
 
-        UpdateNotes();
+        UpdateCells();
     }
 
     // Clear the given number value to the selected cell's text and recorded value (doesn't deselect)
     private void ClearCell(int index)
     {
-        sudokuCells[index].SetMainText("", true); // technically a valid add
+        sudokuCells[index].SetMainText("", true, false); // technically a valid add
         cellDigits[index] = 0;
-        UpdateNotes();
+        incorrectDigits[index] = 0;
+        UpdateCells();
     }
 
     // Resizes the cell prefab and updates the grid center Vector3
@@ -213,8 +217,8 @@ public class SudokuGrid : MonoBehaviour
         gridCenter = new Vector3(gridCenterX, mainCamera.transform.position.y, mainCamera.transform.position.z);
     }
 
-    // Updates/Clears each cell's notes based on current digits in cells
-    private void UpdateNotes()
+    // Updates/Clears each cell's notes, hsubs, and incorrect digits based on current digits in cells
+    private void UpdateCells()
     {
         sudokuRules = new SudokuRules(cellDigits);
 
@@ -227,6 +231,16 @@ public class SudokuGrid : MonoBehaviour
                 sudokuCells[i].ClearNoteText();
                 sudokuRules.ClearCellNotes(i, cellDigits[i]);
             }
+
+            // Resetting formerly incorrect digits if now valid
+            if (incorrectDigits[i] != 0)
+            {
+                if (sudokuRules.IsValidMove(i, incorrectDigits[i]))
+                {
+                    sudokuCells[i].SetMainText($"{incorrectDigits[i]}", true, false);
+                    cellDigits[i] = incorrectDigits[i];
+                }
+            }
         }
 
         SetHSubs(true);
@@ -236,7 +250,7 @@ public class SudokuGrid : MonoBehaviour
     public void ToggleSeeNotes()
     {
         SudokuCell.ToggleSeeNotes();
-        UpdateNotes();
+        UpdateCells();
     }
 
     // Toggle whether you can select in multiple clicks without resetting
@@ -272,11 +286,22 @@ public class SudokuGrid : MonoBehaviour
         for (int i = 0; i < 81; i++)
         {
             // If no digit in cell, set if less than 4 in hsub cell
-            if (cellDigits[i] == 0 && currentHSubRules.hsubGrid[i].Count <= 4)
-                sudokuCells[i].SetHSubs(currentHSubRules.hsubGrid[i], true);
+            if (cellDigits[i] == 0)
+            {
+                if (currentHSubRules.hsubGrid[i].Count <= 4)
+                {
+                    sudokuCells[i].SetHSubs(currentHSubRules.hsubGrid[i], true);
+                    sudokuCells[i].hasHsubValues = true;
+                }
+                else
+                {
+                    sudokuCells[i].SetHSubs(null, true);
+                    sudokuCells[i].hasHsubValues = false;
+                }
+            }
             // Else clear hidden subset text
             else
-                sudokuCells[i].SetHSubs(null, false);
+                sudokuCells[i].hasHsubValues = false;
         }
     }
 }
