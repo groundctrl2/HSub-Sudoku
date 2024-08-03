@@ -1,7 +1,7 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
+// Manages keyboard input for interacting with the Sudoku grid.
+// Provides functionality for adding digits, clearing selections, and toggling various modes using keyboard keys.
 public class KeyboardManager : MonoBehaviour
 {
     public SudokuGrid grid;

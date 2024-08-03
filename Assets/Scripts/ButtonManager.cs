@@ -1,8 +1,8 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+// Manages the buttons for interacting with the Sudoku grid, including digit input, clearing selections, and toggling various modes.
 public class ButtonManager : MonoBehaviour
 {
     public SudokuGrid grid;

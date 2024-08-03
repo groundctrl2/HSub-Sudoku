@@ -1,10 +1,8 @@
 using System.Collections;
-using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using UnityEngine;
-using UnityEngine.Rendering;
 
+// Provides rules and validation for a Sudoku game.
+// Includes methods to check the validity of moves and manage the notes for each cell in the Sudoku grid.
 public class SudokuRules
 {
     private int[] grid;

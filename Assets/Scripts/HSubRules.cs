@@ -1,12 +1,8 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Data;
-using UnityEngine;
-using Unity.Burst.Intrinsics;
-using Unity.VisualScripting;
 
+// Manages the hidden subset (HSub) rules and updates for a Sudoku grid.
+// This class is responsible for finding and updating singles, doubles, triples, and quadruples in the grid's notes.
 public class HSubRules
 {
     private SudokuGrid grid;
@@ -306,8 +302,10 @@ public class HSubRules
         // Get doubles
         for (int i = 0; i < twoValues.Count; i++)
             for (int j = 0; j < twoValues.Count; j++)
+                // Compare each two value position combo (1-1) once
                 if (i < j)
                 {
+                    // Get all unique values within the possible hsub, if only two then it's a double
                     var uniqueValues = HSubRules.GetUniqueValues(noteGroup[twoValues[i]], noteGroup[twoValues[j]], null, null);
                     if (uniqueValues.Count == 2)
                     {
@@ -327,8 +325,10 @@ public class HSubRules
             for (int j = 0; j < threeValues.Count; j++)
                 if (i < j)
                     for (int k = 0; k < threeValues.Count; k++)
+                        // Compare each three value position combo (1-1-1) once
                         if (j < k)
                         {
+                            // Get all unique values within the possible hsub, if only three then it's a triple
                             var uniqueValues = HSubRules.GetUniqueValues(noteGroup[threeValues[i]], noteGroup[threeValues[j]], noteGroup[threeValues[k]], null);
                             if (uniqueValues.Count == 3)
                             {
@@ -350,8 +350,10 @@ public class HSubRules
                     for (int k = 0; k < fourValues.Count; k++)
                         if (j < k)
                             for (int l = 0; l < fourValues.Count; l++)
+                                // Compare each four value position combo (1-1-1-1) once
                                 if (k < l)
                                 {
+                                    // Get all unique values within the possible hsub, if only four then it's a quadruple
                                     var uniqueValues = HSubRules.GetUniqueValues(noteGroup[fourValues[i]], noteGroup[fourValues[j]], noteGroup[fourValues[k]], noteGroup[fourValues[l]]);
                                     if (uniqueValues.Count == 4)
                                     {
@@ -377,7 +379,7 @@ public class HSubRules
         return noteGroup;
     }
 
-    // Returns an inverted version of given note group. As in each digit 1-9 has a list, and within each list is the indices that digit is found
+    // Returns an inverted version of the given note group. As in each value/digit 1-9 has a list, and within each list is the indices that value/digit is found
     public List<int>[] InvertNoteGroup(List<int>[] noteGroup)
     {
         var invertedNoteGroup = new List<int>[9];

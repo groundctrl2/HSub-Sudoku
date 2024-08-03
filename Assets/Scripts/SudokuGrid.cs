@@ -1,38 +1,38 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEditor.SceneManagement;
-using UnityEditor.U2D.Aseprite;
 using UnityEngine;
 using TMPro;
-using UnityEngine.SocialPlatforms;
 
+// Manages the rendering and interaction of the Sudoku grid in the Unity game.
+// Handles the creation of cells, updating their states, and processing user interactions.
 public class SudokuGrid : MonoBehaviour
 {
     public Camera mainCamera;
-    public GameObject cellParent;
-    public GameObject cellPrefab;
-    public GameObject mainTextPrefab;
-    public GameObject noteTextPrefab;
-    public Material[] materials = new Material[4];
+    public GameObject cellParent; // Empty parent GameObject for cells
+    public GameObject cellPrefab; // Type UI 2D Sprite
+    public GameObject mainTextPrefab; // Type TMP Text
+    public GameObject noteTextPrefab; // Type TMP Text
+    public Material[] materials = new Material[4]; // 0:Normal, 1:Hovered, 2:Clicked/Selected, 3:Hidden Subset Error 
     public Color noteColor;
     public Color incorrectColor;
 
-    private Vector3 gridCenter;
+    // Positioning instantiating
+    private Vector3 gridCenter; // Used to center grid when populating
     private Vector3[] cellPositions = new Vector3[81];
-    private SudokuCell[] sudokuCells = new SudokuCell[81];
+    private float cellSize; // Used when populating, set in ResizeCellAndCenter()
 
-    private bool[] cellsClicked = new bool[81];
-    private int[] cellDigits = new int[81];
-    private float cellSize; // Set in ResizeCellAndCenter()
+    // Sudoku cell
+    private SudokuCell[] sudokuCells = new SudokuCell[81]; // 1D index corresponds to 2D position
+    private bool[] cellsClicked = new bool[81]; // Bools represent which cells are clicked
+    private int[] cellDigits = new int[81]; // Ints represent inputted digits in each cell
 
+    // Sudoku rules
     private SudokuRules sudokuRules;
-    private int[] incorrectDigits = new int[81];
+    private int[] incorrectDigits = new int[81]; // Cell indices contain 0 if correct/empty, or the incorrect value if incorrect
 
+    // Hidden subset rules
     private HSubRules hSubRules;
     private bool isShowingHSubs = false;
 
-    // Start is called before the first frame update
+    // Actions to take at program start
     void Start()
     {
         ResizeCellAndCenter();
@@ -40,7 +40,7 @@ public class SudokuGrid : MonoBehaviour
         DrawGrid();
     }
 
-    // Calculates and stores (by index) all 81 cell positions based on cell prefab size
+    // Calculates and stores (by 1D index) all 81 cell positions based on cell prefab size
     private void GetCellPositions()
     {
         Renderer renderer = cellPrefab.GetComponent<Renderer>();
@@ -126,76 +126,7 @@ public class SudokuGrid : MonoBehaviour
             sudokuCells[i] = sudokuCell; // Store SudokuCell
         }
 
-        UpdateCells();
-    }
-
-    // Set whether a cell at given index is selected
-    public void SetSelected(int index, bool isSelected)
-    {
-        if (isSelected)
-            cellsClicked[index] = true;
-        else
-            cellsClicked[index] = false;
-    }
-
-    // Add the given digit to the selected cells' text and recorded value
-    public void AddDigitToSelected(int buttonNumber)
-    {
-        for (int i = 0; i < 81; i++)
-        {
-            if (cellsClicked[i])
-            {
-                // If input same digit as current, clear cell
-                if (buttonNumber == cellDigits[i] || buttonNumber.ToString() == sudokuCells[i].incorrectText)
-                    ClearCell(i);
-                else
-                {
-                    // Check whether valid add
-                    SudokuRules sudokuRules = new SudokuRules(cellDigits);
-                    bool isValid = sudokuRules.IsValidMove(i, buttonNumber);
-
-                    sudokuCells[i].SetMainText($"{buttonNumber}", isValid, false);
-                    if (isValid)
-                        cellDigits[i] = buttonNumber;
-                    else
-                        incorrectDigits[i] = buttonNumber;
-                }
-            }
-        }
-
-        UpdateCells();
-    }
-
-    // Deselect all cells
-    public void DeselectAll()
-    {
-        for (int i = 0; i < 81; i++)
-            sudokuCells[i].Deselect();
-    }
-
-    // Clear the given number value to the selected cells' text and recorded value and deselect 
-    public void ClearSelected()
-    {
-        for (int i = 0; i < 81; i++)
-        {
-            if (cellsClicked[i])
-            {
-                sudokuCells[i].SetMainText("", true, false); // technically a valid add
-                cellDigits[i] = 0;
-                sudokuCells[i].Deselect();
-                cellsClicked[i] = false;
-            }
-        }
-
-        UpdateCells();
-    }
-
-    // Clear the given number value to the selected cell's text and recorded value (doesn't deselect)
-    private void ClearCell(int index)
-    {
-        sudokuCells[index].SetMainText("", true, false); // technically a valid add
-        cellDigits[index] = 0;
-        incorrectDigits[index] = 0;
+        // Initial cell update
         UpdateCells();
     }
 
@@ -217,22 +148,99 @@ public class SudokuGrid : MonoBehaviour
         gridCenter = new Vector3(gridCenterX, mainCamera.transform.position.y, mainCamera.transform.position.z);
     }
 
-    // Updates/Clears each cell's notes, hsubs, and incorrect digits based on current digits in cells
+    // Set whether a cell at given index is selected
+    public void SetSelected(int index, bool isSelected)
+    {
+        cellsClicked[index] = isSelected;
+    }
+
+    // Add the given digit/value to the clicked/selected cells' text and record value
+    public void AddDigitToSelected(int buttonNumber)
+    {
+        for (int i = 0; i < 81; i++)
+        {
+            // Add the given digit if cell is selected
+            if (cellsClicked[i])
+            {
+                // If input same digit as current (including if incorrect), clear cell
+                if (buttonNumber == cellDigits[i] || buttonNumber.ToString() == sudokuCells[i].incorrectText)
+                    ClearCell(i);
+                // Else either add digit as valid or incorrect
+                else
+                {
+                    // Check whether valid then add digit
+                    SudokuRules sudokuRules = new SudokuRules(cellDigits);
+                    bool isValid = sudokuRules.IsValidMove(i, buttonNumber);
+                    sudokuCells[i].SetMainText($"{buttonNumber}", isValid, false);
+
+                    // Store digit in corresponding (valid/incorrect) array record
+                    if (isValid)
+                        cellDigits[i] = buttonNumber;
+                    else
+                        incorrectDigits[i] = buttonNumber;
+                }
+            }
+        }
+
+        UpdateCells();
+    }
+
+    // Deselect all cells
+    public void DeselectAll()
+    {
+        for (int i = 0; i < 81; i++)
+            sudokuCells[i].Deselect();
+    }
+
+    // Clear all clicked/selected cells' text and recorded value then deselect 
+    public void ClearSelected()
+    {
+        for (int i = 0; i < 81; i++)
+        {
+            // Reset all selected cells, as well as their array records
+            if (cellsClicked[i])
+            {
+                sudokuCells[i].SetMainText("", true, false); // Clear text (technically a valid add)
+                cellDigits[i] = 0;
+                sudokuCells[i].Deselect();
+                cellsClicked[i] = false;
+            }
+        }
+
+        // Update cells after clearing
+        UpdateCells();
+    }
+
+    // Clear individual cell at given index text and recorded value, doesn't deselect
+    private void ClearCell(int index)
+    {
+        sudokuCells[index].SetMainText("", true, false); // Clear text (technically a valid add)
+        cellDigits[index] = 0;
+        incorrectDigits[index] = 0;
+
+        // Update cells after clearing
+        UpdateCells();
+    }
+
+    // Updates/Clears each cell's notes, incorrect digits, and hidden subsets based on current digits in cells
     private void UpdateCells()
     {
+        // Get all cell notes
         sudokuRules = new SudokuRules(cellDigits);
 
         for (int i = 0; i < 81; i++)
         {
+            // If cell at index i does not have an inputted value, set the note text
             if (cellDigits[i] == 0)
                 sudokuCells[i].SetNoteText(sudokuRules.notesGrid[i]);
+            // Else clear notes
             else
             {
                 sudokuCells[i].ClearNoteText();
                 sudokuRules.ClearCellNotes(i, cellDigits[i]);
             }
 
-            // Resetting formerly incorrect digits if now valid
+            // Reset formerly incorrect digits if now valid
             if (incorrectDigits[i] != 0)
             {
                 if (sudokuRules.IsValidMove(i, incorrectDigits[i]))
@@ -243,10 +251,53 @@ public class SudokuGrid : MonoBehaviour
             }
         }
 
+        // Set/Reset hidden subsets
         SetHSubs(true);
     }
 
-    // Toggle whether you can see notes. Update them if you can, clear them if you can't.
+    // Calculate and set hidden subsets if true, clear hidden subsets if false
+    private void SetHSubs(bool SetOrClear)
+    {
+        // If setting and showing hsubs, calculate and set text
+        if (SetOrClear && isShowingHSubs)
+        {
+            hSubRules = new HSubRules(this, sudokuRules.notesGrid);
+            ResetHSubs(hSubRules);
+        }
+        // Else if clearing and/or not showing hidden subsets, clear all hsub text
+        else
+            for (int i = 0; i < 81; i++)
+                sudokuCells[i].SetHSubs(null, false);
+    }
+
+    // Reset hidden subsets based on provided hidden subset rule calculations
+    public void ResetHSubs(HSubRules currentHSubRules)
+    {
+        for (int i = 0; i < 81; i++)
+        {
+            // If no digit in cell, set or clear hsubs
+            if (cellDigits[i] == 0)
+            {
+                // If no more than 4 hsub values, set hsubs and record that cell contains hsubs
+                if (currentHSubRules.hsubGrid[i].Count <= 4)
+                {
+                    sudokuCells[i].SetHSubs(currentHSubRules.hsubGrid[i], true);
+                    sudokuCells[i].hasHsubValues = true;
+                }
+                // Else clear hsubs and record that cell contains no hsubs
+                else
+                {
+                    sudokuCells[i].SetHSubs(null, true);
+                    sudokuCells[i].hasHsubValues = false;
+                }
+            }
+            // Else record that cell contains no hsubs
+            else
+                sudokuCells[i].hasHsubValues = false;
+        }
+    }
+
+    // Toggle whether you can see notes and recalculate cells
     public void ToggleSeeNotes()
     {
         SudokuCell.ToggleSeeNotes();
@@ -259,49 +310,10 @@ public class SudokuGrid : MonoBehaviour
         SudokuCell.ToggleMultiSelect();
     }
 
-    // Toggle whether you can see hidden subsets
+    // Toggle whether you can see hidden subsets and then reset them
     public void ToggleHiddenSubsets(bool isOn)
     {
         isShowingHSubs = isOn;
         SetHSubs(isOn);
-    }
-
-    // Calculate and set hidden subsets if true, clear if false
-    private void SetHSubs(bool SetOrClear)
-    {
-        // If on, calculate hidden subsets and set text
-        if (SetOrClear && isShowingHSubs)
-        {
-            hSubRules = new HSubRules(this, sudokuRules.notesGrid);
-            ResetHSubs(hSubRules);
-        }
-        // Else if off, clear all hidden subset text
-        else
-            for (int i = 0; i < 81; i++)
-                sudokuCells[i].SetHSubs(null, false);
-    }
-
-    public void ResetHSubs(HSubRules currentHSubRules)
-    {
-        for (int i = 0; i < 81; i++)
-        {
-            // If no digit in cell, set if less than 4 in hsub cell
-            if (cellDigits[i] == 0)
-            {
-                if (currentHSubRules.hsubGrid[i].Count <= 4)
-                {
-                    sudokuCells[i].SetHSubs(currentHSubRules.hsubGrid[i], true);
-                    sudokuCells[i].hasHsubValues = true;
-                }
-                else
-                {
-                    sudokuCells[i].SetHSubs(null, true);
-                    sudokuCells[i].hasHsubValues = false;
-                }
-            }
-            // Else clear hidden subset text
-            else
-                sudokuCells[i].hasHsubValues = false;
-        }
     }
 }
