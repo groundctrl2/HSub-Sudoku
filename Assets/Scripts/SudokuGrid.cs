@@ -100,7 +100,7 @@ public class SudokuGrid : MonoBehaviour
             GameObject upperText = Instantiate(noteTextPrefab, cell.transform);
             upperText.transform.SetParent(cell.transform, false); // Ensure cell text is parented to the cell
             RectTransform upperRectTransform = upperText.GetComponent<RectTransform>();
-            upperRectTransform.anchoredPosition = new Vector2(0, cellSize / 9); // Position at the top
+            upperRectTransform.anchoredPosition = new Vector2(0, cellSize / 15); // Position at the top
             upperRectTransform.sizeDelta = noteSize; // Set the width to match the cell width
 
             // Add the middle note text GameObject
@@ -117,7 +117,7 @@ public class SudokuGrid : MonoBehaviour
             GameObject lowerText = Instantiate(noteTextPrefab, cell.transform);
             lowerText.transform.SetParent(cell.transform, false); // Ensure cell text is parented to the cell
             RectTransform lowerRectTransform = lowerText.GetComponent<RectTransform>();
-            lowerRectTransform.anchoredPosition = new Vector2(0, -cellSize / 9); // Position at the bottom
+            lowerRectTransform.anchoredPosition = new Vector2(0, -cellSize / 15); // Position at the bottom
             lowerRectTransform.sizeDelta = noteSize; // Set the width to match the cell width
 
             // Create SudokuCell
