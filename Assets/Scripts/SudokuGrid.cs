@@ -217,6 +217,7 @@ public class SudokuGrid : MonoBehaviour
         sudokuCells[index].SetMainText("", true, false); // Clear text (technically a valid add)
         cellDigits[index] = 0;
         incorrectDigits[index] = 0;
+        sudokuCells[index].incorrectText = "";
 
         // Update cells after clearing
         UpdateCells();
@@ -247,6 +248,7 @@ public class SudokuGrid : MonoBehaviour
                 {
                     sudokuCells[i].SetMainText($"{incorrectDigits[i]}", true, false);
                     cellDigits[i] = incorrectDigits[i];
+                    incorrectDigits[i] = 0;
                 }
             }
         }
