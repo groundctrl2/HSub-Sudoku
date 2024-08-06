@@ -200,8 +200,15 @@ public class SudokuGrid : MonoBehaviour
             // Reset all selected cells, as well as their array records
             if (cellsClicked[i])
             {
+                // Clear cell text object and value
                 sudokuCells[i].SetMainText("", true, false); // Clear text (technically a valid add)
                 cellDigits[i] = 0;
+
+                // Clear stored incorrect value
+                incorrectDigits[i] = 0;
+                sudokuCells[i].incorrectText = "";
+
+                // Deselect cell
                 sudokuCells[i].Deselect();
                 cellsClicked[i] = false;
             }
@@ -214,8 +221,11 @@ public class SudokuGrid : MonoBehaviour
     // Clear individual cell at given index text and recorded value, doesn't deselect
     private void ClearCell(int index)
     {
+        // Clear cell text object and value
         sudokuCells[index].SetMainText("", true, false); // Clear text (technically a valid add)
         cellDigits[index] = 0;
+
+        // Clear stored incorrect value
         incorrectDigits[index] = 0;
         sudokuCells[index].incorrectText = "";
 
@@ -249,6 +259,7 @@ public class SudokuGrid : MonoBehaviour
                     sudokuCells[i].SetMainText($"{incorrectDigits[i]}", true, false);
                     cellDigits[i] = incorrectDigits[i];
                     incorrectDigits[i] = 0;
+                    sudokuCells[i].incorrectText = "";
                 }
             }
         }
