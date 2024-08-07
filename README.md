@@ -5,6 +5,7 @@
 *Your Sudoku Sidekick! See all possible digits and uncover hidden subsets.*
 
 [Check the project out on itch.io here!](https://groundctrl2.itch.io/hsub-hero)
+
 This is an optimized Unity implementation of my first CS project, a sudoku hidden subset solver I did in python.
 
 Hidden subsets in Sudoku occur when a specific set of numbers can only be placed in a particular set of cells within a row, column, or box/subgrid. This technique helps identify which numbers can be removed from other cell notes, simplifying the puzzle.
