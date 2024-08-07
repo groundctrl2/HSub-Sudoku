@@ -8,13 +8,13 @@ This is an optimized Unity implementation of my first CS project, a sudoku hidde
 [Check it out on itch.io here!](https://groundctrl2.itch.io/hsub-hero)
 
 Hidden subsets in Sudoku occur when a specific set of numbers can only be placed in a particular set of cells within a row, column, or box/subgrid. This technique helps identify which numbers can be removed from other cell notes, simplifying the puzzle.
-Toggle the hidden subset feature (Key 'H') to let HSUB HERO do the heavy lifting. It highlights hidden subsets and updates your 'hsub notes', removing unnecessary candidates. This makes solving puzzles easier and teaches you advanced Sudoku strategies.
+Toggle the hidden subset feature (Key 'H') to let HSUB HERO do the heavy lifting. It removes unnecessary candidates in the pencil marks/notes (all possible digits) in each cell using hidden subset logic, displaying these new notes in the middle of each cell. This makes solving puzzles easier and teaches you advanced Sudoku strategies.​
 
 Keyboard Controls:
 - Select/ Multi-Select cells: 'S'
 - Deselect selected cells: 'D'
 - Clear selected cells: 'C'
-- Toggle notes (all possible digits in each cell): 'N'
+- Toggle  pencil marks/notes (all possible digits in each cell): 'N'
 - Toggle hidden subsets (hidden subset logic performed on each cell): 'H'
 
 *Get ready to solve puzzles faster and become a Sudoku master with HSUB HERO!* 
