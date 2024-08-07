@@ -9,6 +9,7 @@
 This is an optimized Unity implementation of my first CS project, a sudoku hidden subset solver I did in python.
 
 Hidden subsets in Sudoku occur when a specific set of numbers can only be placed in a particular set of cells within a row, column, or box/subgrid. This technique helps identify which numbers can be removed from other cell notes, simplifying the puzzle.
+
 Toggle the hidden subset feature (Key 'H') to let HSUB HERO do the heavy lifting. It removes unnecessary candidates in the pencil marks/notes (all possible digits) in each cell using hidden subset logic, displaying these new notes in the middle of each cell. This makes solving puzzles easier and teaches you advanced Sudoku strategies.​
 
 Keyboard Controls:
